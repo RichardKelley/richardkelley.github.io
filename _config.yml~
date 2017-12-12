@@ -1,14 +1,14 @@
 # Site settings
-title: Richard Kelley
-description: "AI and Robotics."
-url: "http://richardkelley.github.io"
+title: Monochrome | A minimal, responsive Jekyll blog theme
+description: "A minimal, responsive, ready to use blog template, built with Jekyll."
+url: "http://www.dyutibarma.github.io/monochrome"
 author:
-  name: "Richard Kelley"
-  email: "richard.kelley@gmail.com"
-  url: "https://rkelley.net"
+  name: "The Review Index"
+  email: "dyutibarma@gmail.com"
+  url: "https://thereviewindex.com"
 
 # Build settings
-baseurl: / # Change this to your relative path (ex: /blog/), or leave just a /
+baseurl: /monochrome # Change this to your relative path (ex: /blog/), or leave just a /
 markdown: kramdown
 source: .
 destination: ./_site
