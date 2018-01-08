@@ -19,7 +19,14 @@ reference here's the list:
 
 [Github link](https://github.com/RichardKelley/gnss_driver)
 
-This package 
+The first thing we had to write when we got our MKZ from
+AutonomouStuff was a driver for the Novatel GNSS system that came with
+the car. Baidu had written a robust solution for the same Novatel
+hardware as a part of their [Apollo
+Project](http://apollo.auto/){:target="blank"}, but it was tightly
+integrated into the rest of their system. In this package, I adapted
+Baidu's driver code to function as a standalone ROS package that we
+could run with or without the rest of an autonomous car platform.
 
 ### - <a name="pr2-kinetic"></a> PR2 Kinetic Packages
 
