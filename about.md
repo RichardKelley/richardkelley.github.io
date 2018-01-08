@@ -1,7 +1,7 @@
 ---
 layout: page
-title: Contact
-description: Ways to reach me.
+title: About
+description: Overview of me, and contact information.
 ---
 
 ## Contact Me
