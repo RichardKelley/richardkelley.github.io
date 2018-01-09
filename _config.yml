@@ -5,7 +5,7 @@ url: "http://richardkelley.github.io"
 author:
   name: "Richard Kelley"
   email: "richard.kelley@gmail.com"
-  url: "https://rkelley.net"
+  url: "https://www.richardkelley.io"
 
 # Build settings
 baseurl: / # Change this to your relative path (ex: /blog/), or leave just a /
@@ -31,7 +31,7 @@ gems:
   - jekyll-sitemap
 
 # Custom variables
-version: "1.0.0"
+version: "0.0.1"
 
 # Options
 custom_header: false
