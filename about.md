@@ -22,7 +22,7 @@ of Nevada's autonomous car:
 <iframe width="560" height="315" src="https://www.youtube.com/embed/SEw0hXr5uoE?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </p>
 
-### Social Media
+### Social Networks
 
 I write code. When I share that code, I do it through
 [Github](https://github.com/RichardKelley){:target="blank"}. I also
