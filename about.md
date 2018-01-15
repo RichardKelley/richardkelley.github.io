@@ -27,6 +27,6 @@ of Nevada's autonomous car:
 I write code. When I share that code, I do it through
 [Github](https://github.com/RichardKelley){:target="blank"}. I also
 tweet. You can see those tweets
-[here.](https://twitter.com/richardkelley){:target="blank"}. You can
+[here](https://twitter.com/richardkelley){:target="blank"}. You can
 also email me. My email address is my first name, followed by a dot,
 followed by my last name, at Gmail.
