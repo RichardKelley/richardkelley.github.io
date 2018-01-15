@@ -17,7 +17,7 @@ reference here's the list:
 
 ### - <a name="gnss-driver"></a> Novatel GNSS Driver
 
-[Github link](https://github.com/RichardKelley/gnss_driver)
+[Github link](https://github.com/RichardKelley/gnss_driver){:target="blank"}
 
 The first thing we had to write when we got our MKZ from
 AutonomouStuff was a driver for the Novatel GNSS system that came with
@@ -30,7 +30,7 @@ could run with or without the rest of an autonomous car platform.
 
 ### - <a name="pr2-kinetic"></a> PR2 Kinetic Packages
 
-[Github link](https://github.com/RichardKelley/kinetic_pr2)
+[Github link](https://github.com/RichardKelley/kinetic_pr2){:target="blank"}
 
 One of the most frustrating things about working with a PR2 is the
 need to work with an old Ubuntu distribution and an old ROS

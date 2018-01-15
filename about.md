@@ -8,7 +8,7 @@ description: Overview of me, and contact information.
 
 I am a computer scientist working on artificial intelligence and
 robotics. I currently work at the [University of
-Nevada](http://www.unr.edu/intelligent-mobility).
+Nevada](http://www.unr.edu/intelligent-mobility){:target="blank"}.
 
 ### Videos
 
