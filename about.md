@@ -25,7 +25,7 @@ of Nevada's autonomous car:
 ### Social Media
 
 I write code. When I share that code, I do it through
-[Github](https://github.com/RichardKelley){:target="blank"). I also
+[Github](https://github.com/RichardKelley){:target="blank"}. I also
 tweet. You can see those tweets
 [here.](https://twitter.com/richardkelley){:target="blank"}. You can
 also email me. My email address is my first name, followed by a dot,
