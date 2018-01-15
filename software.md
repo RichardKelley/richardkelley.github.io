@@ -35,7 +35,15 @@ could run with or without the rest of an autonomous car platform.
 One of the most frustrating things about working with a PR2 is the
 need to work with an old Ubuntu distribution and an old ROS
 distribution. This collection of packages aims to fix that by making
-the PR2 work with Gazebo and Moveit on Ubuntu 16.04.
+the PR2 work on [ROS
+Kinetic](http://wiki.ros.org/kinetic){:target="blank"} with Gazebo and
+Moveit on Ubuntu 16.04.
+
+I built this collection by starting with the Indigo versions of the
+packages and modifying them until all of the Kinetic incompabilities
+were gone. It's been tested on several machines by several people, and
+is good enough for simulation. We haven't tried it on the Nevada PR2
+yet, but when we do I'll update this code as needed.
 
 
 
