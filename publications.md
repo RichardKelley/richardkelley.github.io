@@ -38,6 +38,11 @@ Microservice-based architecture for the NRDC. INDIN 2015: 1659-1664
 Nicolescu: Unsupervised Learning of Spatio-temporal Patterns Using
 Spike Timing Dependent Plasticity. AGI 2014: 254-257
 
+- **Richard Kelley**, Alireza Tavakkoli, Chris King, Amol Ambardekar,
+  Liesl Wigand, Mircea Nicolescu and Monica Nicolescu: Intent
+  Recognition for Human-Robot Interaction. Plan, Activity, and Intent
+  Recognition. 2013.
+
 - Damien Ennis, Ann Medaille, Theodore Lambert, **Richard Kelley**
   Frederick C. Harris, (2013) "A comparison of academic libraries: an
   analysis using a self‐organizing map", Performance Measurement and
@@ -53,6 +58,15 @@ Bayesian Intent Recognition. IEEE Trans. Autonomous Mental Development
 N. Nicolescu, Mircea Nicolescu: Deep networks for predicting human
 intent with respect to objects. HRI 2012: 171-172
 
+- Lee Barford, Ivan Gibbs, **Richard Kelley**. Toward Real-Time Kernel
+  Density Estimate Display for Instrumentation. IEEE Instrumentation
+  and Measurement Technology Conference. 2011.
+
+- **Richard Kelley**, Amol Ambardekar, Liesl Wigand, Mircea Nicolescu,
+  Monica Nicolescu. Point Clouds and Range Images for Intent
+  Recognition and Human-Robot Interaction. RSS RGB-D Workshop:
+  Advanced Reasoning with Depth Cameras. 2011.
+
 - Thomas Kollar, Astrid Weiss, Jason Monast, Anja Austermann, David
 Lu, Mitesh Patel, Elena Gribovskaya, Chandan Datta, **Richard Kelley**,
 Hirotaka Osawa, Lanny Lin: HRI pioneers workshop 2011. HRI 2011: 9-10
@@ -64,6 +78,16 @@ Robots as Animals. Advanced Robotics 24(13): 1861-1871 (2010)
 - **Richard Kelley**, Christopher King, Amol Ambardekar, Monica
 N. Nicolescu, Mircea Nicolescu, Alireza Tavakkoli: Integrating Context
 into Intent Recognition Systems. ICINCO (2) 2010: 315-320
+
+- **Richard Kelley**, Alireza Tavakkoli, Chris King, Mircea Nicolescu,
+  Monica Nicolescu: Understanding Activities and Intentions for
+  Human-Robot Interaction. Advances in Human-Robot
+  Interaction. 2009
+
+- Richard Kelley, Mircea Nicolescu, Monica Nicolescu, Sushil Louis. An
+  Evolutionary Approach to Maximum Likelihood Estimation for
+  Generative Stochastic Models. Proceedings of the 40th International
+  Symposium on Robotics. 2009.
 
 - **Richard Kelley**, Monica N. Nicolescu, Mircea Nicolescu: Grammar-based
 robot control. AAMAS (2) 2009: 1153-1154
