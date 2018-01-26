@@ -6,4 +6,5 @@ description: Main listing of pages for the blog.
 
 ## Blog Posts
 
-Here's what I've been thinking about.
+I'm working on a few posts describing my thoughts on recent technical
+subjects. Check back soon to see my first post.
