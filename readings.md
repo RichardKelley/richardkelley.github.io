@@ -15,8 +15,8 @@ comments, please share them with me!
 ## General Resources
 
 There are a few resources that we'll refer back to repeatedly over the
-semester. In no particular order, here are some survey papers we'll
-revisit repeatedly:
+semester. In no particular order, here are some _**survey papers**_ we'll
+revisit as we go:
 
 - [A Survey of Motion Planning and Control Techniques for Self-driving
   Urban
@@ -36,7 +36,7 @@ revisit repeatedly:
   [two](https://onlinelibrary.wiley.com/toc/15564967/25/9){:target="blank"}. Historical
   perspective is always nice.
 
-And here are some code repositories that we'll refer to:
+And here are some _**code repositories**_ that we'll refer to:
 
 - [Baidu's
   Apollo](https://github.com/ApolloAuto/apollo/tree/master/modules){:target="blank"} -
@@ -84,3 +84,7 @@ we're reviewing chapter two, on the Bayes filter.
 We'll also start reviewing the code that currently runs on the car,
 and students should be prepared to present an overview of their
 assigned modules from our internal codebase on Friday.
+
+## Week 2
+
+Coming soon.
