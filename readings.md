@@ -4,7 +4,7 @@ title: Autonomous Vehicle Readings
 description: Weekly readings for my students
 ---
 
-### Autonomous Vehicle Readings
+## Autonomous Vehicle Readings
 
 I have a few new graduate students this semester, and to get them up
 to speed working on the car (and robotics more generally) I'm giving
@@ -12,7 +12,7 @@ them weekly readings of papers, books, and code. If you want to follow
 along, check out the list below. And if you have any suggestions or
 comments, please share them with me!
 
-## General Resources
+### General Resources
 
 There are a few resources that we'll refer back to repeatedly over the
 semester. In no particular order, here are some _**survey papers**_ we'll
@@ -52,7 +52,7 @@ And here are some _**code repositories**_ that we'll refer to:
   interesting to look at how perception was being done before deep
   learning happened.
 
-## Week 0
+### Week 0
 
 _Theme:_ Robot architechture. To the best of my knowledge, all of the
 architectures currently deployed on autonomous vehicles are based on
@@ -72,19 +72,21 @@ full intelligence:
 - [Robot Mind or Robot Body: Whatever happened to the Subsumption
   Architecture?](http://www.artificialhumancompanions.com/robot-mind-robot-body-whatever-happened-subsumption-architecture/){:target="blank"}
 
-## Week 1
+### Week 1
 
 _Theme:_ Probabilistic Robotics. Modern robotics uses probability as
 the framework for almost everything. The book [Probabilistic
 Robotics](http://www.probabilistic-robotics.org/){:target="blank"} is
 still, 12 years after publication, the best resource to learn how
 probability can be used to solve core Robotics problems. This week
-we're reviewing chapter two, on the Bayes filter.
+we're reviewing chapter two, on the Bayes filter. The notation and
+vocabulary set out in that chapter is what we'll be using for most of
+our own work on social robotics for cars.
 
 We'll also start reviewing the code that currently runs on the car,
 and students should be prepared to present an overview of their
 assigned modules from our internal codebase on Friday.
 
-## Week 2
+### Week 2
 
 Coming soon.
