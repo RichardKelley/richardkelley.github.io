@@ -12,7 +12,7 @@ them weekly readings of papers, books, and code. If you want to follow
 along, check out the list below. And if you have any suggestions or
 comments, please share them with me!
 
-### General Resources
+### [General Resources](#general-resouces)
 
 There are a few resources that we'll refer back to repeatedly over the
 semester. In no particular order, here are some _**survey papers**_ we'll
@@ -52,7 +52,7 @@ And here are some _**code repositories**_ that we'll refer to:
   interesting to look at how perception was being done before deep
   learning happened.
 
-### Week 0
+### [Week 0](#week-0)
 
 _Theme:_ Robot architechture. To the best of my knowledge, all of the
 architectures currently deployed on autonomous vehicles are based on
@@ -72,7 +72,7 @@ full intelligence:
 - [Robot Mind or Robot Body: Whatever happened to the Subsumption
   Architecture?](http://www.artificialhumancompanions.com/robot-mind-robot-body-whatever-happened-subsumption-architecture/){:target="blank"}
 
-### Week 1
+### [Week 1](#week-1)
 
 _Theme:_ Probabilistic Robotics. Modern robotics uses probability as
 the framework for almost everything. The book [Probabilistic
@@ -87,6 +87,38 @@ We'll also start reviewing the code that currently runs on the car,
 and students should be prepared to present an overview of their
 assigned modules from our internal codebase on Friday.
 
-### Week 2
+### [Week 2](#week-2)
+
+_Theme:_ Point cloud registration and sensor calibration. In order to
+locate obstacles around the car in a useful way, we need to be able to
+express lidar measurements in the reference frame of our car. This
+requires us to _calibrate_ our lidar to our IMU (which serves as the
+center of our vehicle frame). We're going to look at four resources to
+help us address this problem. First we need to understand the
+_Iterative Closest Point_ algorithm, which solves the problem of
+computing an optimal alignment of two shapes. Read Section 1.3 of the
+following, which provides definitions, notation, and an outline of the
+ICP algorithm:
+
+- [A Review of Point Cloud Registration Algorithms for Mobile Robotics (pdf)](https://hal.archives-ouvertes.fr/hal-01178661/document){:target="blank"}
+
+Once you're familiar with the problem ICP is solving, read this early
+paper on lidar-IMU calibration to see one method for solving the
+lidar-IMU calibration problem:
+
+- [Unsupervised Calibration for Multi-beam Lasers (pdf)](http://driving.stanford.edu/papers/ISER2010.pdf){:target="blank"}
+
+Finally, to gain an understanding of sensor calibration on a modern
+platform, look at these resources from Apollo:
+
+- [Method for Calibrating Extrinsic Parameters Between Multiple-beam LiDAR and GNSS/INS (pdf)](https://github.com/ApolloAuto/apollo/blob/master/docs/specs/lidar_calibration.pdf){:target="blank"}
+- [Apollo 2.0 Sensor Calibration Guide](https://github.com/ApolloAuto/apollo/blob/master/docs/quickstart/apollo_2_0_sensor_calibration_guide.md){:target="blank"}
+
+The first is a description of how Apollo handles lidar-IMU
+calibration, which is similar (but not identical to) Levinson's
+approach. The second guide looks at sensor calibration for other
+sensor pairs (camera-camera, camera-lidar, radar-camera).
+
+### [Week 3](#week-3)
 
 Coming soon.
