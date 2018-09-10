@@ -24,7 +24,7 @@ revisit as we go:
   is a good and recent overview of decision-making, planning, and
   control, with an emphasis on sampling-based motion planning.
 
-- [ Computer Vision for Autonomous Vehicles: Problems, Datasets and
+- [Computer Vision for Autonomous Vehicles: Problems, Datasets and
   State-of-the-Art](https://arxiv.org/abs/1704.05519){:target="blank"}. This
   review paper covers (a lot of) perception, which is the other major
   task in self-driving.
@@ -89,3 +89,36 @@ assigned modules from our internal codebase on Friday.
 
 ### Week 2
 
+_Theme:_ Point cloud registration and sensor calibration. In order to
+locate obstacles around the car in a useful way, we need to be able to
+express lidar measurements in the reference frame of our car. This
+requires us to _calibrate_ our lidar to our IMU (which serves as the
+center of our vehicle frame). We're going to look at four resources to
+help us address this problem. First we need to understand the
+_Iterative Closest Point_ algorithm, which solves the problem of
+computing an optimal alignment of two shapes. Read Section 1.3 of the
+following, which provides definitions, notation, and an outline of the
+ICP algorithm:
+
+- [A Review of Point Cloud Registration Algorithms for Mobile Robotics (pdf)](https://hal.archives-ouvertes.fr/hal-01178661/document){:target="blank"}
+
+Once you're familiar with the problem ICP is solving, read this early
+paper on lidar-IMU calibration to see one method for solving the
+lidar-IMU calibration problem:
+
+- [Unsupervised Calibration for Multi-beam Lasers (pdf)](http://driving.stanford.edu/papers/ISER2010.pdf){:target="blank"}
+
+Finally, to gain an understanding of sensor calibration on a modern
+platform, look at these resources from Apollo:
+
+- [Method for Calibrating Extrinsic Parameters Between Multiple-beam LiDAR and GNSS/INS (pdf)](https://github.com/ApolloAuto/apollo/blob/master/docs/specs/lidar_calibration.pdf){:target="blank"}
+- [Apollo 2.0 Sensor Calibration Guide](https://github.com/ApolloAuto/apollo/blob/master/docs/quickstart/apollo_2_0_sensor_calibration_guide.md){:target="blank"}
+
+The first is a description of how Apollo handles lidar-IMU
+calibration, which is similar (but not identical to) Levinson's
+approach. The second guide looks at sensor calibration for other
+sensor pairs (camera-camera, camera-lidar, radar-camera).
+
+### Week 3 
+
+Coming soon.
