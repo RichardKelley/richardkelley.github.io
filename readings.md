@@ -119,6 +119,6 @@ calibration, which is similar (but not identical to) Levinson's
 approach. The second guide looks at sensor calibration for other
 sensor pairs (camera-camera, camera-lidar, radar-camera).
 
-### Week 3 
+### [Week 3](#week-3)
 
 Coming soon.
