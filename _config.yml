@@ -26,7 +26,7 @@ defaults:
       layout: "post"
 
 # Plugins
-plugins:
+plugins_dir:
   - jekyll-paginate
   - jekyll-sitemap
 
@@ -37,3 +37,5 @@ version: "0.0.1"
 custom_header: false
 custom_nav_footer: false
 reverse: false
+
+gems: [jekyll-paginate]
