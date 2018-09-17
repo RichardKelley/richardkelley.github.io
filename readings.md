@@ -121,4 +121,37 @@ sensor pairs (camera-camera, camera-lidar, radar-camera).
 
 ### Week 3
 
+_Theme:_ Reference frames and a bit of geometry. This week we're going
+to look at conventions for reference frames in robotics and Apollo,
+and then we're going to do just enough differential geometry to
+understand the reference frames we use for planning and control on the
+car. We'll start with two REPs ("ROS Enhancement Proposals") for
+
+
+- [Standard Units of Measure](http://www.ros.org/reps/rep-0103.html){:target="blank"}
+- [Coordinate Frames for Mobile Platforms](http://www.ros.org/reps/rep-0105.html){:target="blank"}
+
+Once you have the general ideas down, look at
+
+- [Apollo's Coordinate System](https://github.com/ApolloAuto/apollo/blob/master/docs/specs/coordination.pdf){:target="blank"}
+
+Lastly, we have one paper to get through:
+
+- [Optimal Trajectory Generation for Dynamic Street Scenarios in a
+Frenet
+Frame](https://www.researchgate.net/profile/Moritz_Werling/publication/224156269_Optimal_Trajectory_Generation_for_Dynamic_Street_Scenarios_in_a_Frenet_Frame/links/54f749df0cf210398e9277af.pdf){:target="blank"}
+
+This paper describes the reference frames we work with in our planner
+and controller. As you work through the paper, also look at Atsushi
+Sakai's
+
+- [Python implementation of this paper](https://github.com/AtsushiSakai/PythonRobotics/blob/master/PathPlanning/FrenetOptimalTrajectory/frenet_optimal_trajectory.py){:target="blank"}
+
+As we go, we'll review the background differential geometry necessary
+to understand the paper and implementation. If you're looking for a
+good differential geometry book, I recommend Manfredo do Carmo's
+_Differential Geometry of Curves & Surfaces_.
+
+### Week 4
+
 Coming soon.
