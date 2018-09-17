@@ -4,6 +4,8 @@ title: Autonomous Vehicle Readings
 description: Weekly readings for my students
 ---
 
+<img src="/img/car.jpg" alt="UNR MKZ Robot" width="500" />
+
 ## Autonomous Vehicle Readings
 
 I have a few new graduate students this semester, and to get them up
