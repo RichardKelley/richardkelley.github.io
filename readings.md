@@ -14,6 +14,60 @@ them weekly readings of papers, books, and code. If you want to follow
 along, check out the list below. And if you have any suggestions or
 comments, please share them with me!
 
+### Week 5
+
+_Theme:_ Sampling-based motion planning. The standard reference for
+this subject is LaValle's book:
+
+- [Planning Algorithms](http://planning.cs.uiuc.edu/){:target="blank"}
+
+We're going to read specific sections from this book, covering the
+minimum you need to know to understand and implement a sampling-based
+planner.
+
+The readings come from chapters 4 and 5 of _Planning Algorithms_:
+
+- [Chapter 4: The Configuration Space](http://planning.cs.uiuc.edu/ch4.pdf){:target="blank"}
+- [Chapter 5: Sampling-Based Motion Planning](http://planning.cs.uiuc.edu/ch5.pdf){:target="blank"}
+
+In chapter 4, read sections 4.3.1 for the definition of the basic
+motion planning problem and skim section 4.3.2 to understand what's
+involved in explicitly constructing the configuration space. Unless
+you've taken algebra and topology, you'll need to refer back to
+sections 4.1 and 4.2 for some definitions.
+
+In chapter 5, skim 5.3 and read 5.4.1 and 5.5. This covers RRT. Skim
+5.6 so that you understand the difference between single-query
+planners and multi-query planners.
+
+You might also want to look at the analysis in 5.1 (metric spaces and
+measure theory), the sampling theory in 5.2, and especially the
+collision detection in 5.3.
+
+A passable RRT implementation in a simple environment requires less
+than 100 lines of Python. You should try to implement the basic RRT
+for a purely geometric problem.
+
+If you get all of that done and you still want more, you're in luck!
+Sampling-based planning is a large subject. The next place to look is
+at _optimal_ planning. Read this paper:
+
+- [Incremental Sampling-based Algorithms for Optimal Motion Planning](http://roboticsproceedings.org/rss06/p34.pdf){:target="blank"}
+
+To see one way sampling-based planning can be used on a car, check
+out:
+
+- [Motion Planning for Urban Driving using RRT](http://acl.mit.edu/papers/KuwataIROS08.pdf){:target="blank"}
+
+as well as the more recent planning survey linked in the General
+Resources section below.
+
+### Week 4
+
+This is a code review week. We're looking at the following repo:
+
+- [Dataspeed ADAS Vehicle Development Kit](https://bitbucket.org/DataspeedInc/dbw_mkz_ros){:target="blank"}
+
 ### Week 3
 
 _Theme:_ Reference frames and a bit of geometry. This week we're going
