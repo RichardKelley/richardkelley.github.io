@@ -6,14 +6,30 @@ description: Code I've written, or helped to write.
 
 ## Software
 
-
-
 Open-source software is an important part of what I do. Here are some
 open-source packages I've developed or contributed to. For quick
 reference here's the list:
 
+- [DeepSpeech ROS Node](#deepspeech)
 - [Novatel GNSS Driver](#gnss-driver)
 - [Kinetic PR2](#pr2-kinetic)
+
+### - <a name="deepspeech"></a> DeepSpeech ROS Node
+ 
+[Github link](https://github.com/RichardKelley/unr_deepspeech){:target="blank"}
+
+We've been wanting to get speech recognition running on the MKZ, but
+we didn't want to use a cloud provider and the standard ROS tools for
+speech are honestly just not very good. Mozilla has invested an
+impressive amount of effort over the past few years into building an
+open-source version of Baidu's DeepSpeech system, which gives
+state-of-the-art recognition performance for English
+speech. Additionally, they've released a pre-trained model for speech
+recognition that achieves a word-error rate of less than seven
+percent! Some of my undergraduate students and I have written a ROS
+wrapper for this model, and released it so that roboticists everywhere
+can yell at their robots and have at least some hope that the robots
+will understand :)
 
 ### - <a name="gnss-driver"></a> Novatel GNSS Driver
 
