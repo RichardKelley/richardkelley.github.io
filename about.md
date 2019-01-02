@@ -4,10 +4,10 @@ title: About
 description: Overview of me, and contact information.
 ---
 
-## About
+## About Me
 
-I am a computer scientist studying artificial intelligence and
-robotics. I currently work at the [University of
+I am a roboticist, currently working on self-driving cars at the
+[University of
 Nevada](http://www.unr.edu/intelligent-mobility){:target="blank"}.
 
 ### Videos
@@ -15,8 +15,8 @@ Nevada](http://www.unr.edu/intelligent-mobility){:target="blank"}.
 I occasionally make videos about my work. You can find them on my
 [YouTube
 page](http://www.youtube.com/user/rkell209){:target="blank"}. Here's
-one of my recent videos, showing the work I'm doing on the University
-of Nevada's autonomous car:
+an early video from my current project, showing some basic
+self-driving on my test platform:
 
 <p style="text-align:center">
 <iframe width="560" height="315" src="https://www.youtube.com/embed/SEw0hXr5uoE?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>

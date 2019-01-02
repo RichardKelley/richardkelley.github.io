@@ -5,6 +5,10 @@ description: This papge lists my publications.
 ---
 ## Publications
 
+- Blanca Miller, **Richard Kelley**. Inverse Reinforcement Learning
+  for Model Predictive Control of a Self-Driving Car. WiML
+  Workshop. 2018.
+
 - Chase Carthen, **Richard Kelley**, Chris Ruggieri, Sergiu Dascalu,
   Justice Colby, Fred Harris. MUSE: A Music Conducting Recognition
   System. Information Technology - New Generations. Advances in
