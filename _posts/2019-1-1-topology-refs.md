@@ -25,7 +25,9 @@ motion planning. Configuration spaces (see LaValle's book above) are
 manifolds, and the papers in this list show that robot trajectories
 can be analyzed in terms of homotopy and homology.
 
+- [Search-based Path Planning with Homotopy Class Constraints](https://www.cs.cmu.edu/~maxim/files/planwithhomotopyconstraints_aaai10.pdf){:target="blank"} (2010)
 - [Identity and Representation of Homotopy Classes of Trajectories for Search-based Path Planning in 3D](http://www.roboticsproceedings.org/rss07/p02.html){:target="blank"} (2011)
+- [Search-based Path Planning with Homotopy Class Constraints in 3D](https://www.cs.cmu.edu/~maxim/files/planwithhomotopy_aaai12_invitedpaper.pdf){:target="blank"} (2012)
 - [Hierarchical Motion Planning in Topological Representations](http://www.roboticsproceedings.org/rss08/p59.pdf){:target="blank"} (2012)
 - [Multiscale Topological Trajectory Classification with Persistent Homology](http://www.roboticsproceedings.org/rss10/p54.pdf){:target="blank"} (2014)
 - [Topological Trajectory Classification with Filtrations of Simplicial Complexes and Persistent Homology](https://journals.sagepub.com/doi/abs/10.1177/0278364915586713){:target="blank"} (2014)
