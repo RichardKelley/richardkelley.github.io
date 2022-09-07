@@ -19,7 +19,7 @@ an early video from my current project, showing some basic
 self-driving on my test platform:
 
 <p style="text-align:center">
-<iframe width="560" height="315" src="https://www.youtube.com/embed/SEw0hXr5uoE?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/UNSX7YNIygc" title="YouTube video player" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </p>
 
 ### Social Networks
