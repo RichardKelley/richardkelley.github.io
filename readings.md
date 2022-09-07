@@ -6,7 +6,11 @@ description: Weekly readings for my students
 
 <img src="/img/car.jpg" alt="UNR MKZ Robot" width="500" />
 
-## Autonomous Vehicle Readings
+## Autonomous Vehicle Readings - 2018
+
+_Originally posted in 2018. The references are still probably useful
+for people who are just starting out in automated vehicles or
+robotics._
 
 I have a few new graduate students this semester, and to get them up
 to speed working on the car (and robotics more generally) I'm giving
@@ -19,7 +23,7 @@ comments, please share them with me!
 _Theme:_ Sampling-based motion planning. The standard reference for
 this subject is LaValle's book:
 
-- [Planning Algorithms](http://planning.cs.uiuc.edu/){:target="blank"}
+- [Planning Algorithms](http://lavalle.pl/planning/){:target="blank"}
 
 We're going to read specific sections from this book, covering the
 minimum you need to know to understand and implement a sampling-based
@@ -27,8 +31,8 @@ planner.
 
 The readings come from chapters 4 and 5 of _Planning Algorithms_:
 
-- [Chapter 4: The Configuration Space](http://planning.cs.uiuc.edu/ch4.pdf){:target="blank"}
-- [Chapter 5: Sampling-Based Motion Planning](http://planning.cs.uiuc.edu/ch5.pdf){:target="blank"}
+- [Chapter 4: The Configuration Space](http://lavalle.pl/planning/ch4.pdf){:target="blank"}
+- [Chapter 5: Sampling-Based Motion Planning](http://lavalle.pl/planning/ch5.pdf){:target="blank"}
 
 In chapter 4, read sections 4.3.1 for the definition of the basic
 motion planning problem and skim section 4.3.2 to understand what's
@@ -163,7 +167,7 @@ more recent blog post asking why the architecture never quite got to
 full intelligence:
 
 - [A Robust Layered Control System for a Mobile
-  Robot](http://www.dtic.mil/dtic/tr/fulltext/u2/a160833.pdf){:target="blank"}
+  Robot](https://people.csail.mit.edu/brooks/papers/AIM-864.pdf){:target="blank"}
 
 - [Robot Mind or Robot Body: Whatever happened to the Subsumption
   Architecture?](http://www.artificialhumancompanions.com/robot-mind-robot-body-whatever-happened-subsumption-architecture/){:target="blank"}
