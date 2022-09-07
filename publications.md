@@ -5,6 +5,14 @@ description: This papge lists my publications.
 ---
 ## Publications
 
+- Gaetano Evangelista, Chase Carthen, Hao Xu, **Richard Kelley**,
+  "Calibration of a Municipal-Scale Lidar Network Using An Autonomous
+  Car." 2022 (expected).
+  
+- Gaetano Evangelista, Ziru Wang, Hao Xu, **Richard Kelley**,
+  "Real-time Traffic Infrastructure Monitoring using Digital Twins
+  Constructed via Lidar-Inertial Odometry," 2022 (expected).
+
 - Eric Duong, Jamie Poston, **Richard Kelley**, “Predicting Agents’
   Trajectories by Estimating Their Motion Planners,” RSS 2020
   Workshop on Interaction and Decision-Making in Autonomous
@@ -13,7 +21,7 @@ description: This papge lists my publications.
 - Janelle Blankenburg, **Richard Kelley**, David Feil-Seifer, Rui Wu, Lee
   Barford, Fred Harris, “Towards GPU-Accelerated PRM for Autonomous
   Navigation,” International Conference on Information Technology: New
-  Gen- erations. 2020.
+  Generations. 2020.
 
 - Houston Lucas, **Richard Kelley**, “Generating Control Policies for
   Autonomous Vehicles Using Neural ODEs,” Workshop on Integration of
