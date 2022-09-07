@@ -5,6 +5,27 @@ description: This papge lists my publications.
 ---
 ## Publications
 
+- Eric Duong, Jamie Poston, **Richard Kelley**, “Predicting Agents’
+  Trajectories by Estimating Their Motion Planners,” RSS 2020
+  Workshop on Interaction and Decision-Making in Autonomous
+  Driving. 2020.
+
+- Janelle Blankenburg, **Richard Kelley**, David Feil-Seifer, Rui Wu, Lee
+  Barford, Fred Harris, “Towards GPU-Accelerated PRM for Autonomous
+  Navigation,” International Conference on Information Technology: New
+  Gen- erations. 2020.
+
+- Houston Lucas, **Richard Kelley**, “Generating Control Policies for
+  Autonomous Vehicles Using Neural ODEs,” Workshop on Integration of
+  Deep Neural Models and Differential Equations, International
+  Conference on Learning Representations. 2020.
+
+- Karla Wagner, Robert Harding, **Richard Kelley**, Brian Labus,
+  Silvia Verdugo, Elizabeth Copulsky, Jeanette Bowles, Maria Luisa
+  Mittal, Peter Davidson, “Post-overdose interventions triggered by
+  calling 911: Centering the perspectives of people who use drugs
+  (PWUDs),” PLOS One. 2019.
+
 - Blanca Miller, **Richard Kelley**. Inverse Reinforcement Learning
   for Model Predictive Control of a Self-Driving Car. WiML
   Workshop. 2018.
