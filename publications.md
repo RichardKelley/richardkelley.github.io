@@ -40,6 +40,9 @@ description: This papge lists my publications.
   Approach for Early Classification of Spatio-Temporal Patterns Using
   Spiking Neural Networks. Neural Processing Letters. 2016.
 
+- **Richard Kelley**, “Sequence Modeling with Recurrent Tensor
+  Networks,” openreview.net. 2016.
+
 - Banafsheh Rekabdar, Monica N. Nicolescu, **Richard Kelley**, Mircea
   Nicolescu. An Unsupervised Approach to Learning and Early Detection
   of Spatio-Temporal Patterns Using Spiking Neural Networks. Journal
