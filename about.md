@@ -19,7 +19,7 @@ site](https://www.faa.gov/uas/programs_partnerships/test_sites/locations#nv){:ta
 a role that I have filled on and off for [several
 years](https://www.nasa.gov/feature/ames/nasa-marks-success-for-most-complex-drone-traffic-management-test-yet-at-faa-test-sites){:target="blank"}.
 
-For a traditional academic CV (pdf), see [here](cv.pdf){:target="blank"}.
+For a traditional academic CV (pdf), see [here](richard-kelley-cv.pdf){:target="blank"}.
 
 ### Videos
 
