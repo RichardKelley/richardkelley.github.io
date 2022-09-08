@@ -6,27 +6,34 @@ description: Overview of me, and contact information.
 
 ## About Me
 
-I am a roboticist, currently working on self-driving cars at the
-[University of
-Nevada](http://www.unr.edu/intelligent-mobility){:target="blank"}.
+I am a roboticist and senior engineer at the Nevada Center for Applied
+Research, where I lead research and development related to automated
+vehicles and intelligent transportation. I also provide technical
+support for Nevada Autonomous, the group that manages the State of
+Nevada's [Federal Aviation Administration Unmanned Aircraft test
+site](https://www.faa.gov/uas/programs_partnerships/test_sites/locations#nv){:target="blank"},
+a role that I have filled on and off for [several
+years](https://www.nasa.gov/feature/ames/nasa-marks-success-for-most-complex-drone-traffic-management-test-yet-at-faa-test-sites){:target="blank"}.
 
 ### Videos
 
-I occasionally make videos about my work. You can find them on my
-[YouTube
-page](http://www.youtube.com/user/rkell209){:target="blank"}. Here's
-an early video from my current project, showing some basic
-self-driving on my test platform:
+As a part of my research on automated vehicles, I have developed a
+software stack to drive a Lincoln MKZ. Here's a video of that system
+driving autonomously in suburban Reno, Nevada:
 
 <p style="text-align:center">
 <iframe width="560" height="315" src="https://www.youtube.com/embed/UNSX7YNIygc" title="YouTube video player" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 </p>
 
+(As with most of our testing, I am also the safety driver for this
+drive.) 
+
+You can watch videos of some of my other work on my [YouTube
+page](http://www.youtube.com/user/rkell209){:target="blank"}.
+
 ### Social Networks
 
-I write code. When I share that code, I do it through
+When I am able to, I like to share software via
 [Github](https://github.com/RichardKelley){:target="blank"}. I also
-tweet. You can see those tweets
-[here](https://twitter.com/richardkelley){:target="blank"}. You can
-also email me. My email address is my first name, followed by a dot,
-followed by my last name, at Gmail.
+tweet occasionally about robotics. You can find me on Twitter
+[here](https://twitter.com/richardkelley){:target="blank"}. 
