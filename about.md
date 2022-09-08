@@ -35,5 +35,6 @@ page](http://www.youtube.com/user/rkell209){:target="blank"}.
 
 When I am able to, I like to share software via
 [Github](https://github.com/RichardKelley){:target="blank"}. I also
-tweet occasionally about robotics. You can find me on Twitter
-[here](https://twitter.com/richardkelley){:target="blank"}. 
+tweet occasionally about robotics, artificial intelligence, and
+math. You can find me on Twitter
+[here](https://twitter.com/richardkelley){:target="blank"}.
