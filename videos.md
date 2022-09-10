@@ -6,8 +6,9 @@ description: Videos of my robotics work.
 
 ## Videos
 
-Successful robotics projects lend themselves to great videos. Below
-are some videos from some of the projects I've worked on recently.
+Successful robotics projects lend themselves to interesting
+videos. Below are videos I've made for some of the projects I've
+worked on recently.
 
 ### Automated Car Driving in Reno
 
