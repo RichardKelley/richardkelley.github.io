@@ -29,7 +29,7 @@ in real time its owner's position to a server. As it is driving, the
 autonomous car queries that server to obtain the positions of nearby
 pedestrians. Using this data enables the car's motion planner to plan
 safer trajectories in the presence of sensor range limitations and
-occlusion.<p>
+occlusion.</p>
 
 <p>This video shows one of the few tests where I was not the safety
 driver. Instead, I am the pedestrian running the app on my phone. You
