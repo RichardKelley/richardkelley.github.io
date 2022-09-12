@@ -10,7 +10,7 @@ Successful robotics projects lend themselves to interesting
 videos. Below are videos I've made for some of the projects I've
 worked on recently.
 
-### Automated Car Driving in Reno
+### Autonomous Car Driving in Reno
 
 <p>I have written a software stack for self-driving in suburban
 settings. Originally inspired by the architecture of Baidu's Apollo
@@ -23,11 +23,12 @@ Reno, Nevada.</p>
 
 ### Beacon-Based Collision Avoidance
 
-<p>My team worked with a Canadian startup to demonstrate beacon-based
-pedestrian collision avoidance. The idea shown in the video below is
-that an app broadcasts the pedestrian's position to a server, which is
-queried by the car's motion planner to enable planning in the presence
-of sensor range limitations and occlusion.</p>
+<p>My team worked with a Canadian startup in 2021 and 2022 to
+demonstrate beacon-based pedestrian collision avoidance. The idea
+shown in the video below is that an app broadcasts the pedestrian's
+position to a server, which is queried by the car's motion planner to
+enable planning in the presence of sensor range limitations and
+occlusion.</p>
 
 <p>This video shows one of the few tests where I was not the safety
 driver. Instead, you can see me walking in front of the car, which
@@ -40,20 +41,20 @@ path of the car.</p>
 
 ### Automated Vehicle Simulation
 
-<p>There are a lot of very interesting self-driving car simulators,
-but our simulation needs have tended not to align with the features
-provided by open-source solutions. We rarely need high-fidelity
-graphics for our projects, but we need to be able to simulate vehicle
-dynamics, planning, and control with fairly high fidelity. The result
-has been that I have ended up writing a very basic OpenGL-based
-vehicle simulator, which I have used to debug controllers (including
-our current model predictive controller) and planners.</p>
+<p>There are a lot of interesting self-driving car simulators, but our
+simulation needs have tended not to align with the features provided
+by current open-source solutions. We rarely need high-fidelity
+graphics for our projects, but we need to be able to accurately
+simulate vehicle dynamics, planning, and control. The result has been
+that I have ended up writing a very basic OpenGL-based vehicle
+simulator, which I have used to debug controllers (including our
+current model predictive controller) and planners.</p>
 
 <p>The video below shows a simulated pedestrian (the circle) crossing
 the path of a self-driving car, which is following a path that was
 loaded from an actual drive of the physical car. The data for this
 simulation was generated as part of the beacon-based collision
-avoidance described in the previous video.</p>
+avoidance project described in the previous video.</p>
 
 <p style="text-align:center">
 <iframe width="560" height="315" src="https://www.youtube.com/embed/pNe_gpRyW_A" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
