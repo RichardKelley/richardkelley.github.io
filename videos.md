@@ -42,10 +42,6 @@ as I walk out from behind a tree.</p>
 
 ### Automated Vehicle Simulation
 
-<p>There are many open-source self-driving car simulators, but they
-tend to focus on high-fidelity 3D graphics. In contrast, we needed a
-simulator </p>
-
 <p>There are many capable self-driving car simulators, but our
 simulation needs have tended not to align with the features provided
 by current open-source solutions, which focus on 3D worlds. We rarely
