@@ -7,15 +7,14 @@ description: Videos of my robotics work.
 ## Videos
 
 Successful robotics projects lend themselves to interesting
-videos. Below are videos I've made for some of the projects I've
-worked on recently.
+videos. Below are videos I've made for some of my recent projects.
 
-### Autonomous Car Driving in Reno
+### Autonomous Car Driving in Reno, Nevada
 
-<p>I have written a software stack for self-driving in suburban
-settings. Originally inspired by the architecture of Baidu's Apollo
-platform, this video shows the ROS-based system driving in suburban
-Reno, Nevada.</p>
+<p>I have written a software stack optimized for self-driving in
+suburban settings. Originally inspired by the architecture of Baidu's
+Apollo platform, this video shows my ROS-based system, nicknamed
+Artemis, driving our Lincoln MKZ in suburban Reno.</p>
 
 <p style="text-align:center">
 <iframe width="560" height="315" src="https://www.youtube.com/embed/UNSX7YNIygc" title="YouTube video player" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen=""></iframe>
@@ -25,15 +24,17 @@ Reno, Nevada.</p>
 
 <p>My team worked with a Canadian startup in 2021 and 2022 to
 demonstrate beacon-based pedestrian collision avoidance. The idea
-shown in the video below is that an app broadcasts the pedestrian's
-position to a server, which is queried by the car's motion planner to
-enable planning in the presence of sensor range limitations and
-occlusion.</p>
+shown in the video below is that a pedestrian's iPhone app broadcasts
+in real time its owner's position to a server. As it is driving, the
+autonomous car queries that server to obtain the positions of nearby
+pedestrians. Using this data enables the car's motion planner to plan
+safer trajectories in the presence of sensor range limitations and
+occlusion.<p>
 
 <p>This video shows one of the few tests where I was not the safety
-driver. Instead, you can see me walking in front of the car, which
-does autonomously stop as I walk out from behind the tree into the
-path of the car.</p>
+driver. Instead, I am the pedestrian running the app on my phone. You
+can see me walking into the path of the car, which autonomously stops
+as I walk out from behind a tree.</p>
 
 <p style="text-align:center">
 <iframe width="560" height="315" src="https://www.youtube.com/embed/jLeni-IW6nE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -41,20 +42,28 @@ path of the car.</p>
 
 ### Automated Vehicle Simulation
 
-<p>There are a lot of interesting self-driving car simulators, but our
+<p>There are many open-source self-driving car simulators, but they
+tend to focus on high-fidelity 3D graphics. In contrast, we needed a
+simulator </p>
+
+<p>There are many capable self-driving car simulators, but our
 simulation needs have tended not to align with the features provided
-by current open-source solutions. We rarely need high-fidelity
-graphics for our projects, but we need to be able to accurately
-simulate vehicle dynamics, planning, and control. The result has been
-that I have ended up writing a very basic OpenGL-based vehicle
-simulator, which I have used to debug controllers (including our
-current model predictive controller) and planners.</p>
+by current open-source solutions, which focus on 3D worlds. We rarely
+need such graphics for our projects, but we must be able to accurately
+simulate vehicle dynamics, planning, and control. Consequently, I
+wrote a custom vehicle simulator, which uses simple OpenGL-based
+graphics and an Entity Component System (ECS) architecture that
+enables flexible simulation of vehicle and pedestrian
+behaviors. Thanks to its flexibility, we have used this simulator to
+rapidly prototype and debug controllers (including our current model
+predictive controller) and planners.</p>
 
 <p>The video below shows a simulated pedestrian (the circle) crossing
-the path of a self-driving car, which is following a path that was
-loaded from an actual drive of the physical car. The data for this
-simulation was generated as part of the beacon-based collision
-avoidance project described in the previous video.</p>
+the path of a self-driving car (the rectangle). The car is following a
+path that was loaded from an actual drive of the physical Lincoln
+MKZ. The data for this simulation was generated as part of the
+beacon-based collision avoidance project described in the previous
+video.</p>
 
 <p style="text-align:center">
 <iframe width="560" height="315" src="https://www.youtube.com/embed/pNe_gpRyW_A" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -62,14 +71,18 @@ avoidance project described in the previous video.</p>
 
 ### ROS-based Autonomous Vehicle Visualization
 
-<p>One of my goals in developing a self-driving car software stack was
-to make the system depend on ROS as much as possible. My team ran
-into difficulties with certain parts of ROS almost immediately,
-particularly around data management and visualization. The video below
-shows some of the difficulty of using ROS bags with the RVIZ
-visualizer. My experience led me to develop tools for data processing
-and visualization that could deal with the volume of data generated by
-a self-driving car.</p>
+<p>My Artemis platform was initially inspired by Baidu's Apollo
+framework. However, the Apollo framework moved away from ROS and
+relied on custom middleware for critical components. One of my goals
+in developing a self-driving car software stack was to minimize
+dependencies outside of the ROS ecosystem as much as possible. But my
+team ran into difficulties with certain parts of ROS almost
+immediately, particularly around data management and
+visualization. The video below shows some of the difficulty of using
+ROS bags with the RVIZ visualizer. To overcome the shortcomings of
+ROS, I developed tools for data processing and visualization that
+could successfully deal with the large volume of data generated by a
+self-driving car.</p>
 
 <p style="text-align:center">
 <iframe width="560" height="315" src="https://www.youtube.com/embed/MsfpRpnVhpE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
