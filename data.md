@@ -7,7 +7,7 @@ description: Data sets I'm sharing.
 ## Data
 
 Sharing data is fundamental to the robotics community. As I collect
-data for the MKZ, I'll put links to it here.
+data for our self-driving Lincoln MKZ, I'll put links to it here.
 
 ### <a name="snow-velodyne"></a> Lidar in Snow
 
