@@ -7,11 +7,11 @@ description: This papge lists my publications.
 
 - Gaetano Evangelista, Chase Carthen, Hao Xu, **Richard Kelley**,
   "Calibration of a Municipal-Scale Lidar Network Using An Autonomous
-  Car." 2022 (expected).
+  Car." 2023 (expected).
   
 - Gaetano Evangelista, Ziru Wang, Hao Xu, **Richard Kelley**,
   "Real-time Traffic Infrastructure Monitoring using Digital Twins
-  Constructed via Lidar-Inertial Odometry," 2022 (expected).
+  Constructed via Lidar-Inertial Odometry," 2023 (expected).
 
 - Eric Duong, Jamie Poston, **Richard Kelley**, “Predicting Agents’
   Trajectories by Estimating Their Motion Planners,” RSS 2020
