@@ -27,6 +27,8 @@ Dendron is a library for building software agents using behavior trees and langu
 
 [Github link](https://github.com/RichardKelley/hflm){:target="blank"}
 
+This library provides a simple, minimal-dependency interface for working with 🤗 Transformers models, based on EleutherAI's Language Model Evaluation Harness. This interface is encapsulated in a single class, HFLM, that provides functions that generate text from a starting prefix and compute the probability of a string given a model. It can be used as a Python library, or via standalone scripts on the command line.
+
 ### - <a name="andron"></a> Andron
 
 [Github link](https://github.com/RichardKelley/andron){:target="blank"}
