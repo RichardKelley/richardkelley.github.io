@@ -21,6 +21,8 @@ reference here's the list:
 
 [Github link](https://github.com/RichardKelley/dendron){:target="blank"}
 
+Dendron is a library for building software agents using behavior trees and language models. Behavior trees are a technique for building complex reactive agents by composing simpler behaviors in a principled way. The behavior tree abstraction arose from Robotics and Game AI, but the premise of Dendron is that this abstraction can enable more sophisticated language-based agents.
+
 ### - <a name="hflm"></a> HFLM
 
 [Github link](https://github.com/RichardKelley/hflm){:target="blank"}
