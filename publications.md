@@ -5,13 +5,15 @@ description: This papge lists my publications.
 ---
 ## Publications
 
-- Gaetano Evangelista, Chase Carthen, Hao Xu, **Richard Kelley**,
-  "Calibration of a Municipal-Scale Lidar Network Using An Autonomous
-  Car." 2024 (expected).
-  
-- Gaetano Evangelista, Ziru Wang, Hao Xu, **Richard Kelley**,
-  "Real-time Traffic Infrastructure Monitoring using Digital Twins
-  Constructed via Lidar-Inertial Odometry," 2024 (expected).
+- Gaetano Evangelista, Hao Xu, Duncan Wilson, **Richard Kelley**, “Calibration 
+  of a Municipal-Scale Lidar Network Using An Autonomous Car.” 2025 (expected).
+
+- Gaetano Evangelista, Ziru Wang, Hao Xu, **Richard Kelley**, “Real-time Traffic 
+  Infrastructure Monitoring using Digital Twins Constructed via 
+  Lidar-Inertial Odometry.” 2025 (expected).
+
+- **Richard Kelley**, "Behavior Trees Enable Structured Programming 
+  of Language Model Agents," arXiv preprint arXiv:2404.07439. 2024.
 
 - Eric Duong, Jamie Poston, **Richard Kelley**, “Predicting Agents’
   Trajectories by Estimating Their Motion Planners,” RSS 2020
