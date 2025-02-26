@@ -33,6 +33,8 @@ This library provides a simple, minimal-dependency interface for working with ðŸ
 
 [Github link](https://github.com/RichardKelley/andron){:target="blank"}
 
+A typesetting system for creating interlinear translations of ancient texts.
+
 ### - <a name="deepspeech"></a> DeepSpeech ROS Node
  
 [Github link](https://github.com/RichardKelley/unr_deepspeech){:target="blank"}
