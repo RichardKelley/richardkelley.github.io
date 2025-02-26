@@ -9,4 +9,4 @@ description: Resources for the courses that I have taught.
 
 - **Autonomous Vehicle Reading Group**
 
-  In 2018 I ran a reading group for Computer Science students interested in understanding algorithms and software for autonomous cars. I collected a list of resources for that group here: [Readings for AV Group]({% link av_readings.md %}). 
+  In 2018 I ran a reading group for Computer Science students interested in understanding algorithms and software for autonomous cars. I collected a list of resources for that group here: [Readings for AV Group]({% link av_readings.md %}).

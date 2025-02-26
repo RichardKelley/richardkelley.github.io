@@ -10,9 +10,24 @@ Open-source software is an important part of what I do. Here are some
 open-source packages I've developed or contributed to. For quick
 reference here's the list:
 
+- [Dendron](#dendron)
+- [HFLM](#hflm)
+- [Andron](#andron)
 - [DeepSpeech ROS Node](#deepspeech)
 - [Novatel GNSS Driver](#gnss-driver)
 - [Kinetic PR2](#pr2-kinetic)
+
+### - <a name="dendron"></a> Dendron
+
+[Github link](https://github.com/RichardKelley/dendron){:target="blank"}
+
+### - <a name="hflm"></a> HFLM
+
+[Github link](https://github.com/RichardKelley/hflm){:target="blank"}
+
+### - <a name="andron"></a> Andron
+
+[Github link](https://github.com/RichardKelley/andron){:target="blank"}
 
 ### - <a name="deepspeech"></a> DeepSpeech ROS Node
  
