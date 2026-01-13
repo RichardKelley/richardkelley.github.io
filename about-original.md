@@ -1,0 +1,31 @@
+---
+layout: default
+title: Original About
+permalink: /about-original/
+---
+
+<p><img src="/img/me.jpg" alt="An image of Richard Kelley standing in front of a self-driving car." width="500" /></p>
+
+<p>I am a roboticist and computer scientist.</p>
+
+<p>Until recently, I was the senior engineer at the Nevada Center for Applied Research, where I led research and development focused on automated vehicles and intelligent transportation systems. I was also the senior engineer for Nevada Autonomous, the State of Nevada’s <a href="https://www.faa.gov/uas/programs_partnerships/test_sites/locations#nv" target="blank">Federal Aviation Administration Unmanned Aircraft test site</a>, a role that I filled on and off <a href="https://www.sandiegouniontribune.com/sdut-unr-researchers-work-with-nasa-on-drone-traffic-2015aug09-story.html"
+target="blank">from 2015</a>.</p>
+
+<p>For a traditional academic CV (pdf), see <a href="/richard-kelley-cv.pdf" target="blank">here</a>.</p>
+
+<h3 id="videos">Videos</h3>
+
+<p>As a part of my research on automated vehicles, I developed a ROS-based software stack to drive a Lincoln MKZ. Here’s a video of that system driving autonomously in suburban Reno, Nevada:</p>
+
+<p style="text-align:center">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/UNSX7YNIygc" title="YouTube video player" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen=""></iframe>
+</p>
+
+<p>(As with most of our testing, I was also the safety driver for this video.)</p>
+
+<p>You can watch videos of some of my other work on my <a href="http://www.youtube.com/user/rkell209" target="blank">YouTube page</a>.</p>
+
+<h3 id="social-networks">Social Networks</h3>
+
+<p>When I am able to, I like to share software via <a href="https://github.com/RichardKelley" target="blank">Github</a>. I also post occasionally about robotics, artificial intelligence, and math on X (Twitter) <a href="https://twitter.com/richardkelley" target="blank">here</a>.</p>
+

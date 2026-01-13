@@ -1,6 +1,6 @@
 ## Released under MIT License
 
-Copyright (c) 2017 The Review Index
+Copyright (c) 2026 The Review Index
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
