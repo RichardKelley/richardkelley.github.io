@@ -6,8 +6,9 @@ description: Data sets I'm sharing.
 
 ## Data
 
-Sharing data is fundamental to the robotics community. As I collect
-data for our self-driving Lincoln MKZ, I'll put links to it here.
+Sharing data is fundamental to the robotics community. When I managed
+an autonomous vehicle group in Nevada, I collected some data that I
+made publically available. You can find links to that data below.
 
 ### <a name="snow-velodyne"></a> Lidar in Snow
 
@@ -17,11 +18,7 @@ data for our self-driving Lincoln MKZ, I'll put links to it here.
 
 This is a ROS bag file containing point clouds collected by a single
 Velodyne VLP-16 lidar unit on top of our MKZ. The bag was recorded
-while we drove through a brief but intense snow storm. We expect that
-we will have multiple opportunities in 2018 and 2019 to collect
-similar (but larger) data sets, but we hope that this raw data is
-useful to people interested in the behavior of lidar in snowy
-conditions.
+while we drove through a brief but intense snow storm.
 
 A few items to note: The ROS package we used for our ROS driver is the
 [velodyne_puck package from Vijay Kumar's

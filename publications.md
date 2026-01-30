@@ -5,12 +5,13 @@ description: This papge lists my publications.
 ---
 ## Publications
 
-- Gaetano Evangelista, Hao Xu, Duncan Wilson, **Richard Kelley**, “Calibration 
-  of a Municipal-Scale Lidar Network Using An Autonomous Car.” 2025 (expected).
+- G. Evangelista, H. Lucas, **Richard Kelley**, “Enhancing Infrastructure Monitoring 
+  with Calibrated Vision Language Model Ensembles: A Graffiti Detection Case Study,” 
+  20th International Symposium on Visual Computing, Las Vegas, United States. 2025.
 
-- Gaetano Evangelista, Ziru Wang, Hao Xu, **Richard Kelley**, “Real-time Traffic 
-  Infrastructure Monitoring using Digital Twins Constructed via 
-  Lidar-Inertial Odometry.” 2025 (expected).
+- J. Stevens, D. Wilson, **Richard Kelley**, “The Maximum Number of Sets for 12 
+  Cards is 14,” 2025 IEEE Conference on Games (CoG), Lisbon, Portugal. 2025, 
+  doi: 10.1109/CoG64752.2025.11114382.
 
 - **Richard Kelley**, "Behavior Trees Enable Structured Programming 
   of Language Model Agents," arXiv preprint arXiv:2404.07439. 2024.
