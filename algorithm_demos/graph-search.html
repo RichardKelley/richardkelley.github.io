@@ -1,0 +1,1168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Graph Search Lab</title>
+  <style>
+    :root {
+      --bg1: #f4f0e8;
+      --bg2: #e9f0f8;
+      --ink: #1d1d1b;
+      --muted: #5a5a55;
+      --accent: #2b6cb0;
+      --accent-2: #2f855a;
+      --edge: #4a5568;
+      --card: rgba(255, 255, 255, 0.82);
+      --shadow: 0 18px 40px rgba(29, 29, 27, 0.12);
+      --tree-width: 320px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Fira Sans", "Avenir Next", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: radial-gradient(1200px 600px at 20% 10%, #fef7e9, transparent),
+        radial-gradient(900px 700px at 90% 5%, #d8e7ff, transparent),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 28px 32px 10px;
+    }
+
+    header h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      letter-spacing: 0.5px;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 320px minmax(380px, 1fr) 12px minmax(240px, var(--tree-width));
+      gap: 18px;
+      padding: 14px 24px 28px;
+      align-items: stretch;
+    }
+
+    .panel {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .panel h2 {
+      font-size: 16px;
+      margin: 0 0 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .controls button,
+    .controls select,
+    .controls input[type="range"] {
+      width: 100%;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      background: #111827;
+      color: #f9fafb;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button.secondary {
+      background: #f8fafc;
+      color: #111827;
+      border: 1px solid #cbd5f5;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    button:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 16px rgba(17, 24, 39, 0.12);
+    }
+
+    .mode-group {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .mode-group button.active {
+      background: var(--accent);
+      color: white;
+      border: none;
+    }
+
+    .stack-view {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;
+      min-height: 140px;
+      font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 13px;
+    }
+
+    .current-node {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      margin-bottom: 10px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0c4a6e;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.2px;
+    }
+
+    .stack-item {
+      padding: 6px 8px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      margin-bottom: 6px;
+    }
+
+    .stack-item.top {
+      background: rgba(59, 130, 246, 0.4);
+    }
+
+    .set-label {
+      margin-top: 10px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+
+    .set-view {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px;
+      min-height: 38px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      font-size: 12px;
+    }
+
+    .set-chip {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      color: #1f2937;
+      font-weight: 600;
+    }
+
+    .set-empty {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .log {
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 36px;
+    }
+
+    .canvas-panel {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tree-panel {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .resizer {
+      width: 12px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(148, 163, 184, 0.4), rgba(148, 163, 184, 0.1));
+      cursor: col-resize;
+      align-self: stretch;
+      box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.35);
+      transition: background 0.2s ease;
+    }
+
+    .resizer:hover {
+      background: linear-gradient(180deg, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.1));
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      border-radius: 18px;
+      background: linear-gradient(140deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.75));
+      box-shadow: var(--shadow);
+    }
+
+    #tree {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(240, 244, 255, 0.85));
+      box-shadow: none;
+      height: 100%;
+      flex: 1;
+      display: block;
+    }
+
+    .tree-panel .hint {
+      margin-top: 10px;
+    }
+
+    .tree-edge {
+      stroke: #64748b;
+      stroke-width: 2;
+    }
+
+    .tree-node circle {
+      fill: #e9d5ff;
+      stroke: #6b21a8;
+      stroke-width: 2;
+    }
+
+    .tree-node text {
+      font-weight: 700;
+      font-size: 13px;
+      fill: #2e1065;
+      pointer-events: none;
+    }
+
+    .edge {
+      stroke: var(--edge);
+      stroke-width: 3;
+      pointer-events: stroke;
+    }
+
+    .edge.selected {
+      stroke: #e53e3e;
+      stroke-dasharray: 6 6;
+    }
+
+    .node circle {
+      fill: #fef3c7;
+      stroke: #111827;
+      stroke-width: 2;
+    }
+
+    .node text {
+      font-weight: 700;
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .node.visited circle {
+      fill: #bbf7d0;
+      stroke: #166534;
+    }
+
+    .node.current circle {
+      fill: #bfdbfe;
+      stroke: #1e3a8a;
+      stroke-width: 3;
+    }
+
+    .node.pending circle {
+      fill: #fed7aa;
+      stroke: #c2410c;
+    }
+
+    .node.selected circle {
+      fill: #fecaca;
+      stroke: #b91c1c;
+      stroke-width: 3;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 1200px) {
+      .layout {
+        grid-template-columns: 320px 1fr;
+      }
+
+      .resizer {
+        display: none;
+      }
+
+      .tree-panel {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .canvas-panel {
+        min-height: 360px;
+      }
+
+      .tree-panel {
+        min-height: 360px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Graph Search Lab</h1>
+    <p>Build an undirected graph, pick a start node, and watch DFS or BFS unfold with a live frontier.</p>
+  </header>
+
+  <main class="layout" id="layout">
+    <section class="panel" id="control-panel">
+      <h2>Build</h2>
+      <div class="controls">
+        <div class="mode-group">
+          <button id="mode-node" class="active">Add Node</button>
+          <button id="mode-edge" class="secondary">Add Edge</button>
+          <button id="mode-move" class="secondary">Move</button>
+          <button id="mode-delete" class="secondary">Delete</button>
+        </div>
+        <label>
+          Start node
+          <select id="start-select"></select>
+        </label>
+        <button id="pick-start" class="secondary">Pick Start On Canvas</button>
+        <button id="clear" class="secondary">Clear Graph</button>
+        <p class="hint">Add edges by clicking two nodes. Delete removes nodes or edges.</p>
+      </div>
+
+      <h2>Algorithm</h2>
+      <div class="controls">
+        <div class="mode-group">
+          <button id="algo-dfs" class="active">DFS</button>
+          <button id="algo-bfs" class="secondary">BFS</button>
+        </div>
+      </div>
+
+      <h2>Traversal</h2>
+      <div class="controls">
+        <button id="step">Step</button>
+        <button id="run">Run</button>
+        <button id="pause" class="secondary" disabled>Pause</button>
+        <button id="reset" class="secondary">Reset</button>
+        <label>
+          Speed
+          <input id="speed" type="range" min="200" max="1400" value="700" />
+        </label>
+      </div>
+
+      <h2 id="frontier-title">Stack</h2>
+      <div id="current" class="current-node">Current: —</div>
+      <div id="stack" class="stack-view"></div>
+      <div class="set-label">Reached</div>
+      <div id="reached" class="set-view"></div>
+      <p id="log" class="log"></p>
+    </section>
+
+    <section class="canvas-panel">
+      <svg id="graph" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet"></svg>
+    </section>
+
+    <div id="resizer" class="resizer" aria-hidden="true"></div>
+
+    <section class="panel tree-panel">
+      <h2 id="tree-title">DFS Tree</h2>
+      <svg id="tree" viewBox="0 0 320 700" preserveAspectRatio="xMidYMid meet"></svg>
+      <p class="hint">The tree grows as each node is first reached.</p>
+    </section>
+  </main>
+
+  <script>
+    const svg = document.getElementById("graph");
+    const treeSvg = document.getElementById("tree");
+    const layoutEl = document.getElementById("layout");
+    const controlPanel = document.getElementById("control-panel");
+    const canvasPanel = document.querySelector(".canvas-panel");
+    const treePanel = document.querySelector(".tree-panel");
+    const resizer = document.getElementById("resizer");
+    const startSelect = document.getElementById("start-select");
+    const currentBadge = document.getElementById("current");
+    const reachedView = document.getElementById("reached");
+    const frontierTitle = document.getElementById("frontier-title");
+    const treeTitle = document.getElementById("tree-title");
+    const stackView = document.getElementById("stack");
+    const log = document.getElementById("log");
+
+    const algoButtons = {
+      dfs: document.getElementById("algo-dfs"),
+      bfs: document.getElementById("algo-bfs")
+    };
+
+    const modeButtons = {
+      node: document.getElementById("mode-node"),
+      edge: document.getElementById("mode-edge"),
+      move: document.getElementById("mode-move"),
+      delete: document.getElementById("mode-delete")
+    };
+
+    const pickStartButton = document.getElementById("pick-start");
+    const stepButton = document.getElementById("step");
+    const runButton = document.getElementById("run");
+    const pauseButton = document.getElementById("pause");
+    const resetButton = document.getElementById("reset");
+    const clearButton = document.getElementById("clear");
+    const speedInput = document.getElementById("speed");
+
+    let nodes = [];
+    let edges = [];
+    let nextId = 1;
+    let mode = "node";
+    let selectedNodeId = null;
+    let pickingStart = false;
+    let draggingId = null;
+    let dragOffset = { x: 0, y: 0 };
+    let algorithm = "dfs";
+
+    let steps = [];
+    let stepIndex = 0;
+    let timer = null;
+    let isRunning = false;
+
+    const NODE_RADIUS = 24;
+    const BASE_WIDTH = 1000;
+    const BASE_HEIGHT = 700;
+    const TREE_MIN = 240;
+    const CANVAS_MIN = 380;
+    let viewBoxState = { x: 0, y: 0, width: BASE_WIDTH, height: BASE_HEIGHT };
+
+    function setMode(newMode) {
+      if (isRunning) return;
+      mode = newMode;
+      selectedNodeId = null;
+      pickingStart = false;
+      Object.entries(modeButtons).forEach(([key, button]) => {
+        if (key === newMode) {
+          button.classList.add("active");
+          button.classList.remove("secondary");
+        } else {
+          button.classList.remove("active");
+          button.classList.add("secondary");
+        }
+      });
+      log.textContent = mode === "edge" ? "Click two nodes to connect them." : "";
+      syncPanelHeights();
+      refreshView();
+    }
+
+    function setAlgorithm(nextAlgorithm) {
+      if (isRunning) return;
+      algorithm = nextAlgorithm;
+      Object.entries(algoButtons).forEach(([key, button]) => {
+        if (key === nextAlgorithm) {
+          button.classList.add("active");
+          button.classList.remove("secondary");
+        } else {
+          button.classList.remove("active");
+          button.classList.add("secondary");
+        }
+      });
+      if (frontierTitle) {
+        frontierTitle.textContent = nextAlgorithm === "bfs" ? "Queue" : "Stack";
+      }
+      if (treeTitle) {
+        treeTitle.textContent = nextAlgorithm === "bfs" ? "BFS Tree" : "DFS Tree";
+      }
+      syncPanelHeights();
+      resetTraversal();
+    }
+
+    function addNode(x, y) {
+      const bounds = getBounds();
+      const clampedX = Math.max(bounds.minX, Math.min(bounds.maxX, x));
+      const clampedY = Math.max(bounds.minY, Math.min(bounds.maxY, y));
+      const id = nextId++;
+      const label = id <= 26 ? String.fromCharCode(64 + id) : `N${id}`;
+      nodes.push({ id, x: clampedX, y: clampedY, label });
+      render();
+      updateStartOptions();
+    }
+
+    function addEdge(a, b) {
+      if (a === b) return;
+      const exists = edges.some((e) => (e.a === a && e.b === b) || (e.a === b && e.b === a));
+      if (exists) return;
+      edges.push({ a, b });
+      render();
+    }
+
+    function removeNode(id) {
+      nodes = nodes.filter((n) => n.id !== id);
+      edges = edges.filter((e) => e.a !== id && e.b !== id);
+      if (startSelect.value === String(id)) {
+        startSelect.value = "";
+      }
+      render();
+      updateStartOptions();
+    }
+
+    function removeEdge(a, b) {
+      edges = edges.filter((e) => !(e.a === a && e.b === b) && !(e.a === b && e.b === a));
+      render();
+    }
+
+    function updateStartOptions() {
+      const current = startSelect.value;
+      startSelect.innerHTML = "<option value=\"\">Choose...</option>";
+      nodes.forEach((node) => {
+        const option = document.createElement("option");
+        option.value = node.id;
+        option.textContent = node.label;
+        startSelect.appendChild(option);
+      });
+      if ([...startSelect.options].some((opt) => opt.value === current)) {
+        startSelect.value = current;
+      }
+    }
+
+    function getNodeById(id) {
+      return nodes.find((n) => n.id === id);
+    }
+
+    function getPointer(evt) {
+      const ctm = svg.getScreenCTM();
+      if (ctm) {
+        const point = svg.createSVGPoint();
+        point.x = evt.clientX;
+        point.y = evt.clientY;
+        const transformed = point.matrixTransform(ctm.inverse());
+        return { x: transformed.x, y: transformed.y };
+      }
+      const rect = svg.getBoundingClientRect();
+      const x = ((evt.clientX - rect.left) / rect.width) * BASE_WIDTH;
+      const y = ((evt.clientY - rect.top) / rect.height) * BASE_HEIGHT;
+      return { x, y };
+    }
+
+    function updateViewBox() {
+      const width = svg.clientWidth || BASE_WIDTH;
+      const height = svg.clientHeight || BASE_HEIGHT;
+      const targetRatio = width / height;
+      const baseRatio = BASE_WIDTH / BASE_HEIGHT;
+      let viewWidth = BASE_WIDTH;
+      let viewHeight = BASE_HEIGHT;
+      let viewX = 0;
+      let viewY = 0;
+
+      if (targetRatio > baseRatio) {
+        viewWidth = BASE_HEIGHT * targetRatio;
+        viewX = -(viewWidth - BASE_WIDTH) / 2;
+      } else if (targetRatio < baseRatio) {
+        viewHeight = BASE_WIDTH / targetRatio;
+        viewY = -(viewHeight - BASE_HEIGHT) / 2;
+      }
+
+      viewBoxState = { x: viewX, y: viewY, width: viewWidth, height: viewHeight };
+      svg.setAttribute("viewBox", `${viewX} ${viewY} ${viewWidth} ${viewHeight}`);
+    }
+
+    function getBounds() {
+      return {
+        minX: viewBoxState.x + NODE_RADIUS,
+        maxX: viewBoxState.x + viewBoxState.width - NODE_RADIUS,
+        minY: viewBoxState.y + NODE_RADIUS,
+        maxY: viewBoxState.y + viewBoxState.height - NODE_RADIUS
+      };
+    }
+
+    function createAdjacency() {
+      const adj = new Map();
+      nodes.forEach((node) => adj.set(node.id, []));
+      edges.forEach((edge) => {
+        adj.get(edge.a)?.push(edge.b);
+        adj.get(edge.b)?.push(edge.a);
+      });
+      adj.forEach((neighbors, id) => {
+        neighbors.sort((a, b) => {
+          const la = getNodeById(a)?.label || "";
+          const lb = getNodeById(b)?.label || "";
+          return la.localeCompare(lb);
+        });
+      });
+      return adj;
+    }
+
+    function buildSteps() {
+      const startId = Number(startSelect.value);
+      if (!startId) {
+        log.textContent = "Select a start node to run a traversal.";
+        return [];
+      }
+      const adj = createAdjacency();
+      const visited = new Set();
+      const treeEdges = [];
+      const built = [];
+
+      if (algorithm === "bfs") {
+        const queue = [];
+        const reached = new Set();
+
+        const snapshot = (action, current = null) => {
+          built.push({
+            action,
+            current,
+            frontier: queue.map((entry) => entry.id),
+            visited: [...visited],
+            reached: [...reached],
+            treeEdges: treeEdges.map((edge) => [...edge]),
+            treeRoot: startId
+          });
+        };
+
+        reached.add(startId);
+        queue.push({ id: startId });
+        snapshot(`enqueue ${getNodeById(startId)?.label}`, null);
+
+        while (queue.length > 0) {
+          const { id: nodeId } = queue.shift();
+          snapshot(`dequeue ${getNodeById(nodeId)?.label}`, nodeId);
+
+          if (visited.has(nodeId)) {
+            snapshot(`skip ${getNodeById(nodeId)?.label} (expanded)`, nodeId);
+            continue;
+          }
+
+          visited.add(nodeId);
+          snapshot(`expand ${getNodeById(nodeId)?.label}`, nodeId);
+
+          const neighbors = adj.get(nodeId) || [];
+          neighbors.forEach((neighborId) => {
+            if (reached.has(neighborId)) return;
+            reached.add(neighborId);
+            treeEdges.push([nodeId, neighborId]);
+            queue.push({ id: neighborId });
+            snapshot(`enqueue ${getNodeById(neighborId)?.label}`, nodeId);
+          });
+        }
+
+        snapshot("done", null);
+        return built;
+      }
+
+      const stack = [];
+
+      const snapshot = (action, current = null) => {
+        built.push({
+          action,
+          current,
+          frontier: stack.map((entry) => entry.id),
+          visited: [...visited],
+          reached: [...visited],
+          treeEdges: treeEdges.map((edge) => [...edge]),
+          treeRoot: startId
+        });
+      };
+
+      stack.push({ id: startId, parent: null });
+      snapshot(`push ${getNodeById(startId)?.label}`, null);
+
+      while (stack.length > 0) {
+        const { id: nodeId, parent } = stack.pop();
+        snapshot(`pop ${getNodeById(nodeId)?.label}`, nodeId);
+
+        if (visited.has(nodeId)) {
+          snapshot(`skip ${getNodeById(nodeId)?.label} (visited)`, nodeId);
+          continue;
+        }
+
+        visited.add(nodeId);
+        if (parent != null) {
+          treeEdges.push([parent, nodeId]);
+        }
+        snapshot(`visit ${getNodeById(nodeId)?.label}`, nodeId);
+
+        const neighbors = adj.get(nodeId) || [];
+        const pending = neighbors.filter((n) => !visited.has(n));
+        for (let i = pending.length - 1; i >= 0; i -= 1) {
+          const neighborId = pending[i];
+          stack.push({ id: neighborId, parent: nodeId });
+          snapshot(`push ${getNodeById(neighborId)?.label}`, nodeId);
+        }
+      }
+
+      snapshot("done", null);
+      return built;
+    }
+
+    function applyStep(step) {
+      const visitedSet = new Set(step.visited);
+      const frontier = step.frontier || [];
+      document.querySelectorAll(".node").forEach((nodeEl) => {
+        const nodeId = Number(nodeEl.dataset.id);
+        nodeEl.classList.toggle("visited", visitedSet.has(nodeId));
+        nodeEl.classList.toggle("current", step.current === nodeId);
+        nodeEl.classList.toggle("pending", frontier.includes(nodeId) && !visitedSet.has(nodeId));
+      });
+
+      const currentLabel = step.current ? getNodeById(step.current)?.label || "?" : "—";
+      if (currentBadge) {
+        currentBadge.textContent = `Current: ${currentLabel}`;
+      }
+
+      stackView.innerHTML = "";
+      if (frontier.length === 0) {
+        stackView.innerHTML = "<div class=\"stack-item\">(empty)</div>";
+      } else {
+        const display = algorithm === "dfs" ? [...frontier].reverse() : [...frontier];
+        display.forEach((nodeId, idx) => {
+          const item = document.createElement("div");
+          item.className = "stack-item" + (idx === 0 ? " top" : "");
+          item.textContent = getNodeById(nodeId)?.label || "?";
+          stackView.appendChild(item);
+        });
+      }
+
+      log.textContent = step.action;
+      renderReached(step);
+      renderTree(step);
+      syncPanelHeights();
+    }
+
+    function renderReached(step) {
+      if (!reachedView) return;
+      const reached = step.reached || step.visited || [];
+      reachedView.innerHTML = "";
+      if (reached.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "set-empty";
+        empty.textContent = "(none)";
+        reachedView.appendChild(empty);
+        return;
+      }
+      reached.forEach((nodeId) => {
+        const chip = document.createElement("div");
+        chip.className = "set-chip";
+        chip.textContent = getNodeById(nodeId)?.label || "?";
+        reachedView.appendChild(chip);
+      });
+    }
+
+    function renderTree(step) {
+      if (!treeSvg) return;
+      treeSvg.innerHTML = "";
+      const reachedSet = new Set(step.reached || step.visited || []);
+      const treeEdges = step.treeEdges || [];
+      const rootId = step.treeRoot;
+      const width = treeSvg.viewBox.baseVal.width || 320;
+      const height = treeSvg.viewBox.baseVal.height || 700;
+
+      if (!rootId || reachedSet.size === 0) {
+        const message = !rootId
+          ? "Select a start node to build the tree."
+          : `Run ${algorithm.toUpperCase()} to grow the tree.`;
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", width / 2);
+        text.setAttribute("y", height / 2);
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("fill", "#475569");
+        text.setAttribute("font-size", "13");
+        text.textContent = message;
+        treeSvg.appendChild(text);
+        return;
+      }
+
+      const children = new Map();
+      reachedSet.forEach((id) => children.set(id, []));
+      treeEdges.forEach(([parent, child]) => {
+        if (!reachedSet.has(parent) || !reachedSet.has(child)) return;
+        if (!children.has(parent)) children.set(parent, []);
+        children.get(parent).push(child);
+      });
+
+      const depth = new Map();
+      const queue = [];
+      depth.set(rootId, 0);
+      queue.push(rootId);
+      while (queue.length > 0) {
+        const current = queue.shift();
+        const nextDepth = depth.get(current) + 1;
+        (children.get(current) || []).forEach((child) => {
+          if (depth.has(child)) return;
+          depth.set(child, nextDepth);
+          queue.push(child);
+        });
+      }
+
+      const levels = new Map();
+      depth.forEach((level, id) => {
+        if (!levels.has(level)) levels.set(level, []);
+        levels.get(level).push(id);
+      });
+
+      const levelKeys = [...levels.keys()];
+      const maxDepth = levelKeys.length > 0 ? Math.max(...levelKeys) : 0;
+      const margin = 32;
+      const levelHeight = (height - margin * 2) / Math.max(1, maxDepth + 1);
+      const positions = new Map();
+
+      levels.forEach((ids, level) => {
+        ids.sort((a, b) => {
+          const la = getNodeById(a)?.label || "";
+          const lb = getNodeById(b)?.label || "";
+          return la.localeCompare(lb);
+        });
+        const spacing = width / (ids.length + 1);
+        ids.forEach((id, index) => {
+          positions.set(id, {
+            x: spacing * (index + 1),
+            y: margin + level * levelHeight
+          });
+        });
+      });
+
+      treeEdges.forEach(([parent, child]) => {
+        const from = positions.get(parent);
+        const to = positions.get(child);
+        if (!from || !to) return;
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", from.x);
+        line.setAttribute("y1", from.y);
+        line.setAttribute("x2", to.x);
+        line.setAttribute("y2", to.y);
+        line.classList.add("tree-edge");
+        treeSvg.appendChild(line);
+      });
+
+      positions.forEach((pos, id) => {
+        const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        group.classList.add("tree-node");
+        group.setAttribute("transform", `translate(${pos.x}, ${pos.y})`);
+
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("r", 14);
+
+        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        label.setAttribute("text-anchor", "middle");
+        label.setAttribute("dy", "0.35em");
+        label.textContent = getNodeById(id)?.label || "?";
+
+        group.appendChild(circle);
+        group.appendChild(label);
+        treeSvg.appendChild(group);
+      });
+    }
+
+    function resetTraversal() {
+      steps = buildSteps();
+      stepIndex = 0;
+      if (steps.length > 0) {
+        applyStep(steps[0]);
+      } else {
+        stackView.innerHTML = "<div class=\"stack-item\">(empty)</div>";
+        if (currentBadge) {
+          currentBadge.textContent = "Current: —";
+        }
+        renderReached({ reached: [], visited: [] });
+        renderTree({ visited: [], treeEdges: [], treeRoot: null });
+      }
+      syncPanelHeights();
+      isRunning = false;
+      pauseButton.disabled = true;
+      runButton.disabled = steps.length === 0;
+      stepButton.disabled = steps.length === 0;
+    }
+
+    function runTraversal() {
+      if (isRunning || steps.length === 0) return;
+      isRunning = true;
+      runButton.disabled = true;
+      pauseButton.disabled = false;
+      stepButton.disabled = true;
+
+      const tick = () => {
+        if (!isRunning) return;
+        stepIndex += 1;
+        if (stepIndex >= steps.length) {
+          isRunning = false;
+          pauseButton.disabled = true;
+          stepButton.disabled = false;
+          runButton.disabled = false;
+          return;
+        }
+        applyStep(steps[stepIndex]);
+        timer = setTimeout(tick, Number(speedInput.value));
+      };
+
+      timer = setTimeout(tick, Number(speedInput.value));
+    }
+
+    function pauseTraversal() {
+      isRunning = false;
+      pauseButton.disabled = true;
+      runButton.disabled = false;
+      stepButton.disabled = false;
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    }
+
+    function stepTraversal() {
+      if (steps.length === 0) return;
+      if (stepIndex + 1 >= steps.length) return;
+      stepIndex += 1;
+      applyStep(steps[stepIndex]);
+    }
+
+    function clearGraph() {
+      nodes = [];
+      edges = [];
+      nextId = 1;
+      selectedNodeId = null;
+      render();
+      updateStartOptions();
+      resetTraversal();
+    }
+
+    function render() {
+      svg.innerHTML = "";
+      edges.forEach((edge) => {
+        const a = getNodeById(edge.a);
+        const b = getNodeById(edge.b);
+        if (!a || !b) return;
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", a.x);
+        line.setAttribute("y1", a.y);
+        line.setAttribute("x2", b.x);
+        line.setAttribute("y2", b.y);
+        line.classList.add("edge");
+        line.dataset.a = edge.a;
+        line.dataset.b = edge.b;
+        svg.appendChild(line);
+      });
+
+      nodes.forEach((node) => {
+        const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        group.classList.add("node");
+        if (mode === "edge" && selectedNodeId === node.id) {
+          group.classList.add("selected");
+        }
+        group.dataset.id = node.id;
+        group.setAttribute("transform", `translate(${node.x}, ${node.y})`);
+
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("r", NODE_RADIUS);
+
+        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        label.setAttribute("text-anchor", "middle");
+        label.setAttribute("dy", "0.35em");
+        label.textContent = node.label;
+
+        group.appendChild(circle);
+        group.appendChild(label);
+        svg.appendChild(group);
+      });
+    }
+
+    function updateTreeWidth(clientX) {
+      if (!layoutEl || !controlPanel || !resizer) return;
+      const rect = layoutEl.getBoundingClientRect();
+      const leftWidth = controlPanel.getBoundingClientRect().width;
+      const handleWidth = resizer.getBoundingClientRect().width;
+      const available = rect.width - leftWidth - handleWidth;
+      const maxTree = Math.max(TREE_MIN, available - CANVAS_MIN);
+      let desired = rect.right - clientX;
+      desired = Math.max(TREE_MIN, Math.min(maxTree, desired));
+      document.documentElement.style.setProperty("--tree-width", `${desired}px`);
+      syncPanelHeights();
+      refreshView();
+    }
+
+    function syncPanelHeights() {
+      if (!controlPanel || !canvasPanel || !treePanel) return;
+      const height = controlPanel.getBoundingClientRect().height;
+      if (!height) return;
+      canvasPanel.style.height = `${height}px`;
+      treePanel.style.height = `${height}px`;
+      updateViewBox();
+    }
+
+    function refreshView() {
+      render();
+      if (steps.length > 0) {
+        applyStep(steps[stepIndex]);
+      } else {
+        renderReached({ reached: [], visited: [] });
+      }
+    }
+
+    svg.addEventListener("click", (evt) => {
+      if (isRunning) return;
+      const targetNode = evt.target.closest(".node");
+      const targetEdge = evt.target.closest(".edge");
+
+      if (pickingStart && targetNode) {
+        startSelect.value = targetNode.dataset.id;
+        pickingStart = false;
+        pickStartButton.textContent = "Pick Start On Canvas";
+        resetTraversal();
+        return;
+      }
+
+      if (mode === "node" && !targetNode) {
+        const { x, y } = getPointer(evt);
+        addNode(x, y);
+        resetTraversal();
+      } else if (mode === "edge" && targetNode) {
+        const nodeId = Number(targetNode.dataset.id);
+        if (!selectedNodeId) {
+          selectedNodeId = nodeId;
+          refreshView();
+          log.textContent = `Selected ${getNodeById(nodeId)?.label}, choose another node.`;
+        } else {
+          const first = selectedNodeId;
+          selectedNodeId = null;
+          addEdge(first, nodeId);
+          log.textContent = "Edge added.";
+          resetTraversal();
+        }
+      } else if (mode === "delete") {
+        if (targetNode) {
+          removeNode(Number(targetNode.dataset.id));
+          resetTraversal();
+        } else if (targetEdge) {
+          removeEdge(Number(targetEdge.dataset.a), Number(targetEdge.dataset.b));
+          resetTraversal();
+        }
+      }
+    });
+
+    svg.addEventListener("pointerdown", (evt) => {
+      if (mode !== "move" || isRunning) return;
+      const targetNode = evt.target.closest(".node");
+      if (!targetNode) return;
+      draggingId = Number(targetNode.dataset.id);
+      const { x, y } = getPointer(evt);
+      const node = getNodeById(draggingId);
+      if (!node) return;
+      dragOffset = { x: node.x - x, y: node.y - y };
+      svg.setPointerCapture(evt.pointerId);
+    });
+
+    svg.addEventListener("pointermove", (evt) => {
+      if (draggingId == null) return;
+      const node = getNodeById(draggingId);
+      if (!node) return;
+      const { x, y } = getPointer(evt);
+      const bounds = getBounds();
+      node.x = Math.max(bounds.minX, Math.min(bounds.maxX, x + dragOffset.x));
+      node.y = Math.max(bounds.minY, Math.min(bounds.maxY, y + dragOffset.y));
+      render();
+      applyStep(steps[stepIndex] || { action: "", current: null, stack: [], visited: [] });
+    });
+
+    svg.addEventListener("pointerup", (evt) => {
+      if (draggingId == null) return;
+      draggingId = null;
+      svg.releasePointerCapture(evt.pointerId);
+    });
+
+    if (resizer) {
+      resizer.addEventListener("pointerdown", (evt) => {
+        resizer.setPointerCapture(evt.pointerId);
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
+        updateTreeWidth(evt.clientX);
+      });
+
+      resizer.addEventListener("pointermove", (evt) => {
+        if (!resizer.hasPointerCapture(evt.pointerId)) return;
+        updateTreeWidth(evt.clientX);
+      });
+
+      resizer.addEventListener("pointerup", (evt) => {
+        if (resizer.hasPointerCapture(evt.pointerId)) {
+          resizer.releasePointerCapture(evt.pointerId);
+        }
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      });
+    }
+
+    Object.entries(modeButtons).forEach(([key, button]) => {
+      button.addEventListener("click", () => setMode(key));
+    });
+
+    Object.entries(algoButtons).forEach(([key, button]) => {
+      button.addEventListener("click", () => setAlgorithm(key));
+    });
+
+    pickStartButton.addEventListener("click", () => {
+      if (isRunning) return;
+      pickingStart = !pickingStart;
+      pickStartButton.textContent = pickingStart ? "Click A Node..." : "Pick Start On Canvas";
+    });
+
+    startSelect.addEventListener("change", () => {
+      resetTraversal();
+    });
+
+    stepButton.addEventListener("click", () => {
+      if (steps.length === 0) {
+        resetTraversal();
+      }
+      stepTraversal();
+    });
+
+    runButton.addEventListener("click", () => {
+      if (steps.length === 0) {
+        resetTraversal();
+      }
+      runTraversal();
+    });
+
+    pauseButton.addEventListener("click", pauseTraversal);
+    resetButton.addEventListener("click", resetTraversal);
+    clearButton.addEventListener("click", clearGraph);
+
+    window.addEventListener("resize", () => {
+      syncPanelHeights();
+      refreshView();
+    });
+
+    syncPanelHeights();
+    updateStartOptions();
+    resetTraversal();
+  </script>
+</body>
+</html>
