@@ -15,6 +15,8 @@ destination: ./_site
 permalink: /:title
 paginate: 8
 paginate_path: /page:num/
+include:
+  - _posts/2026-02-16-llm-training/llm-training-2026.jpg
 
 # Default values
 defaults:
