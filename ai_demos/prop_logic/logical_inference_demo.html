@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Propositional Logic Demo</title>
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --panel: #fffdf8;
+      --ink: #1f2a2e;
+      --muted: #66767e;
+      --accent: #0e7490;
+      --accent-strong: #115e7a;
+      --rule-off: #9aa7ad;
+      --true: #1d8f5a;
+      --false: #b23a2a;
+      --unset: #6b7280;
+      --inconsistent-bg: #1f2937;
+      --inconsistent-ink: #9ca3af;
+      --grid: #d9ddd8;
+      --shadow: 0 12px 30px rgba(21, 36, 43, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 18%, #d8f2ea 0%, rgba(216, 242, 234, 0) 42%),
+        radial-gradient(circle at 88% 15%, #d7eaf7 0%, rgba(215, 234, 247, 0) 45%),
+        linear-gradient(180deg, #f7f5ef 0%, #efebe1 100%);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: none;
+      width: 100%;
+      margin: 32px 0;
+      padding: 0 20px 24px;
+    }
+
+    .layout {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: minmax(360px, 1.2fr) minmax(0, 2fr) minmax(320px, 1.1fr);
+      align-items: start;
+    }
+
+    .left-column {
+      display: grid;
+      gap: 16px;
+    }
+
+    .layout .card {
+      margin-bottom: 0;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid #e3e6e1;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.4rem, 2.4vw, 2rem);
+      letter-spacing: 0.01em;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .section-title {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #3c4a50;
+    }
+
+    .control-row {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    #variableControls {
+      grid-template-columns: 1fr;
+    }
+
+    .var-control {
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+    }
+
+    .meaning-input {
+      width: 100%;
+      border: 1px solid #cbd7db;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font: inherit;
+      color: #1f2a2e;
+      background: #ffffff;
+    }
+
+    .meaning-input:focus {
+      outline: 2px solid #9fd7ea;
+      outline-offset: 1px;
+      border-color: #7bc8e4;
+    }
+
+    .hint {
+      margin-top: 10px;
+      color: #5b6c73;
+      font-size: 0.9rem;
+    }
+
+    button {
+      font: inherit;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #dde5e8;
+      color: #14303b;
+      cursor: pointer;
+      transition: transform 120ms ease, background 150ms ease, color 150ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .var-btn.true {
+      background: #d5f5e8;
+      color: var(--true);
+    }
+
+    .var-btn.false {
+      background: #f8ddd8;
+      color: var(--false);
+    }
+
+    .var-btn.unset {
+      background: #e7eaee;
+      color: var(--unset);
+    }
+
+    .var-btn {
+      font-weight: 700;
+      font-size: 1.05rem;
+      min-height: 44px;
+    }
+
+    .rule-btn {
+      text-align: left;
+      padding: 12px;
+      background: #e3edf1;
+      color: #244753;
+    }
+
+    .rule-btn.active {
+      background: #d0ecf6;
+      color: var(--accent-strong);
+      box-shadow: inset 0 0 0 1px #97d8ed;
+    }
+
+    .rule-btn.inactive {
+      background: #edf1f3;
+      color: var(--rule-off);
+      box-shadow: inset 0 0 0 1px #d5dde1;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .actions button.primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .actions button.secondary {
+      background: #dbe3e8;
+      color: #2b4652;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-weight: 600;
+      color: #2d3d44;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    .state-summary {
+      display: grid;
+      gap: 8px;
+    }
+
+    .analysis-card {
+      min-height: 640px;
+    }
+
+    .state-summary label {
+      font-size: 0.9rem;
+      color: #4a5d66;
+      font-weight: 600;
+    }
+
+    #stateNarrative {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      border: 1px solid #cbd7db;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      line-height: 1.4;
+      color: #1f2a2e;
+      background: #fbfefc;
+    }
+
+    #violationNarrative {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      border: 1px solid #d9c7c3;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      line-height: 1.4;
+      color: #2f1f1f;
+      background: #fff8f6;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 620px;
+      font-size: 0.95rem;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--grid);
+      text-align: center;
+      padding: 8px;
+    }
+
+    th {
+      background: #edf4f2;
+      color: #33444b;
+      font-weight: 700;
+    }
+
+    .var-meaning {
+      margin-top: 4px;
+      font-size: 0.75rem;
+      color: #61737b;
+      font-weight: 500;
+      line-height: 1.2;
+      white-space: normal;
+    }
+
+    tr:nth-child(even) {
+      background: #fbfcfa;
+    }
+
+    tr.world-row {
+      cursor: pointer;
+    }
+
+    tr.world-row:hover {
+      background: #edf6f8;
+    }
+
+    tr.world-row.selected {
+      box-shadow: inset 0 0 0 2px #0e7490;
+      background: #d9eff5;
+    }
+
+    tr.world-row.darkened.selected {
+      box-shadow: inset 0 0 0 2px #a3d8ea;
+      background: #2f3b4b !important;
+    }
+
+    .truth-true {
+      color: var(--true);
+      font-weight: 700;
+    }
+
+    .truth-false {
+      color: var(--false);
+      font-weight: 700;
+    }
+
+    .truth-unset {
+      color: var(--unset);
+      font-weight: 700;
+    }
+
+    tr.darkened {
+      background: var(--inconsistent-bg) !important;
+      color: var(--inconsistent-ink);
+      opacity: 0.88;
+    }
+
+    tr.darkened .truth-true,
+    tr.darkened .truth-false,
+    tr.darkened .truth-unset {
+      color: var(--inconsistent-ink);
+    }
+
+    .legend {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      color: #52646d;
+      font-size: 0.9rem;
+      margin-top: 8px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .swatch.true { background: var(--true); }
+    .swatch.false { background: var(--false); }
+    .swatch.unset { background: var(--unset); }
+
+    @media (max-width: 1350px) {
+      .layout {
+        grid-template-columns: minmax(340px, 1.1fr) minmax(0, 1.6fr);
+      }
+    }
+
+    @media (max-width: 960px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .var-control {
+        grid-template-columns: 1fr;
+      }
+
+      .analysis-card {
+        min-height: auto;
+      }
+
+      #stateNarrative,
+      #violationNarrative {
+        min-height: 140px;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .wrap {
+        margin-top: 16px;
+      }
+
+      .card {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card">
+      <h1>Propositional Logic Demo</h1>
+      <p>
+        Click each variable to cycle <strong>Unset -> True -> False</strong>. Toggle rules on or off,
+        and the worlds table updates immediately to darken rows that violate your active constraints.
+      </p>
+    </section>
+
+    <div class="layout">
+      <div class="left-column">
+        <section class="card">
+          <h2 class="section-title">Propositional Variables</h2>
+          <div id="variableControls" class="control-row"></div>
+          <div class="legend">
+            <span class="chip"><span class="swatch unset"></span>Unset = no direct constraint</span>
+            <span class="chip"><span class="swatch true"></span>True = variable must be true</span>
+            <span class="chip"><span class="swatch false"></span>False = variable must be false</span>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2 class="section-title">Implication Rules</h2>
+          <div id="ruleControls" class="control-row"></div>
+          <div class="actions">
+            <button id="resetAll" class="secondary">Reset variables + rules</button>
+          </div>
+          <p id="status" class="status"></p>
+        </section>
+      </div>
+
+      <section class="card">
+        <h2 class="section-title">Possible States of the World</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr id="worldHeader"></tr>
+            </thead>
+            <tbody id="worldTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card analysis-card">
+        <h2 class="section-title">Selected State Analysis</h2>
+        <div class="state-summary">
+          <label for="stateNarrative">State description (click a row):</label>
+          <textarea id="stateNarrative" readonly>Click a world row to generate a natural-language summary.</textarea>
+          <label for="violationNarrative">Violations:</label>
+          <textarea id="violationNarrative" readonly>Click a world row to see violated assignments and rules.</textarea>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const variables = ["P", "Q", "R", "S"];
+    const stateCycle = [null, true, false];
+    const defaultMeanings = {
+      P: "You completed the prerequisite checklist",
+      Q: "Your advisor sign-off is approved",
+      R: "Your registration hold is lifted",
+      S: "You can enroll in Advanced AI",
+    };
+
+    const assignment = Object.fromEntries(variables.map((v) => [v, null]));
+    const meanings = Object.fromEntries(variables.map((v) => [v, defaultMeanings[v] || ""]));
+
+    const rules = [
+      {
+        id: "r1",
+        label: "P -> Q",
+        active: true,
+        holds: (w) => !w.P || w.Q,
+      },
+      {
+        id: "r2",
+        label: "Q -> R",
+        active: true,
+        holds: (w) => !w.Q || w.R,
+      },
+      {
+        id: "r3",
+        label: "(P && R) -> S",
+        active: false,
+        holds: (w) => !(w.P && w.R) || w.S,
+      },
+      {
+        id: "r4",
+        label: "S -> P",
+        active: false,
+        holds: (w) => !w.S || w.P,
+      },
+    ];
+
+    const worlds = buildAllWorlds(variables);
+
+    const variableControls = document.getElementById("variableControls");
+    const ruleControls = document.getElementById("ruleControls");
+    const headerRow = document.getElementById("worldHeader");
+    const worldTableBody = document.getElementById("worldTableBody");
+    const status = document.getElementById("status");
+    const resetAllBtn = document.getElementById("resetAll");
+    const stateNarrative = document.getElementById("stateNarrative");
+    const violationNarrative = document.getElementById("violationNarrative");
+    let selectedWorldIndex = null;
+
+    function buildAllWorlds(vars) {
+      const count = 1 << vars.length;
+      const result = [];
+
+      for (let i = 0; i < count; i += 1) {
+        const world = {};
+        vars.forEach((name, idx) => {
+          const mask = 1 << (vars.length - idx - 1);
+          world[name] = Boolean(i & mask);
+        });
+        result.push(world);
+      }
+
+      return result;
+    }
+
+    function triStateText(value) {
+      if (value === true) return "True";
+      if (value === false) return "False";
+      return "Unset";
+    }
+
+    function triStateClass(value) {
+      if (value === true) return "truth-true";
+      if (value === false) return "truth-false";
+      return "truth-unset";
+    }
+
+    function nextState(current) {
+      const idx = stateCycle.indexOf(current);
+      return stateCycle[(idx + 1) % stateCycle.length];
+    }
+
+    function consistentWithAssignments(world) {
+      return variables.every((name) => {
+        if (assignment[name] === null) return true;
+        return world[name] === assignment[name];
+      });
+    }
+
+    function consistentWithRules(world) {
+      return rules.every((rule) => !rule.active || rule.holds(world));
+    }
+
+    function isConsistent(world) {
+      return consistentWithAssignments(world) && consistentWithRules(world);
+    }
+
+    function collectViolations(world) {
+      const violations = [];
+
+      variables.forEach((name) => {
+        if (assignment[name] === null) return;
+        if (world[name] === assignment[name]) return;
+
+        const required = assignment[name] ? "true" : "false";
+        const actual = world[name] ? "true" : "false";
+        const meaningText = meanings[name].trim();
+        const suffix = meaningText ? ` (${meaningText})` : "";
+        violations.push(`Assignment mismatch: ${name}${suffix} is required to be ${required}, but this state has ${actual}.`);
+      });
+
+      rules.forEach((rule) => {
+        if (!rule.active) return;
+        if (rule.holds(world)) return;
+        violations.push(`Rule violation: ${rule.label} is active but false in this state.`);
+      });
+
+      return violations;
+    }
+
+    function describeVariableState(name, value) {
+      const meaningText = meanings[name].trim();
+      if (meaningText) {
+        return value
+          ? `It is true that ${meaningText}.`
+          : `It is false that ${meaningText}.`;
+      }
+      return value ? `${name} is true.` : `${name} is false.`;
+    }
+
+    function updateNarrative() {
+      if (selectedWorldIndex === null) {
+        stateNarrative.value = "Click a world row to generate a natural-language summary.";
+        violationNarrative.value = "Click a world row to see violated assignments and rules.";
+        return;
+      }
+
+      const world = worlds[selectedWorldIndex];
+      const clauses = variables.map((name) => describeVariableState(name, world[name]));
+      const consistencyLine = isConsistent(world)
+        ? "This state is consistent with the active rules and assignments."
+        : "This state violates at least one active rule or assigned variable value.";
+      const violations = collectViolations(world);
+
+      stateNarrative.value = `World w${selectedWorldIndex}. ${clauses.join(" ")} ${consistencyLine}`;
+      violationNarrative.value = violations.length
+        ? violations.join("\n")
+        : "No violations for this state.";
+    }
+
+    function renderVariableControls() {
+      variableControls.innerHTML = "";
+      variables.forEach((name) => {
+        const wrap = document.createElement("div");
+        wrap.className = "var-control";
+
+        const btn = document.createElement("button");
+        btn.className = `var-btn ${triStateClass(assignment[name]).replace("truth-", "")}`;
+        btn.textContent = name;
+        btn.setAttribute("aria-label", `${name} is ${triStateText(assignment[name])}`);
+        btn.title = `${name}: ${triStateText(assignment[name])}`;
+        btn.addEventListener("click", () => {
+          assignment[name] = nextState(assignment[name]);
+          renderAll();
+        });
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "meaning-input";
+        input.placeholder = `Meaning of ${name}`;
+        input.value = meanings[name];
+        input.setAttribute("aria-label", `Meaning of ${name}`);
+        input.addEventListener("input", (event) => {
+          meanings[name] = event.target.value;
+          renderWorldTable();
+        });
+
+        wrap.appendChild(btn);
+        wrap.appendChild(input);
+        variableControls.appendChild(wrap);
+      });
+    }
+
+    function renderRuleControls() {
+      ruleControls.innerHTML = "";
+      rules.forEach((rule) => {
+        const btn = document.createElement("button");
+        btn.className = `rule-btn ${rule.active ? "active" : "inactive"}`;
+        btn.textContent = `${rule.active ? "ON" : "OFF"}  ${rule.label}`;
+        btn.addEventListener("click", () => {
+          rule.active = !rule.active;
+          renderAll();
+        });
+        ruleControls.appendChild(btn);
+      });
+    }
+
+    function renderWorldTable() {
+      headerRow.innerHTML = "";
+      const first = document.createElement("th");
+      first.textContent = "World";
+      headerRow.appendChild(first);
+
+      variables.forEach((name) => {
+        const th = document.createElement("th");
+        const symbol = document.createElement("div");
+        symbol.textContent = name;
+        th.appendChild(symbol);
+
+        const meaningText = meanings[name].trim();
+        if (meaningText) {
+          const meaning = document.createElement("div");
+          meaning.className = "var-meaning";
+          meaning.textContent = meaningText;
+          th.appendChild(meaning);
+          th.title = `${name}: ${meaningText}`;
+        } else {
+          th.title = `${name}: no interpretation`;
+        }
+
+        headerRow.appendChild(th);
+      });
+
+      worldTableBody.innerHTML = "";
+
+      worlds.forEach((world, idx) => {
+        const row = document.createElement("tr");
+        row.classList.add("world-row");
+        const consistent = isConsistent(world);
+
+        if (!consistent) {
+          row.classList.add("darkened");
+        }
+        if (selectedWorldIndex === idx) {
+          row.classList.add("selected");
+        }
+
+        const idCell = document.createElement("td");
+        idCell.textContent = `w${idx}`;
+        row.appendChild(idCell);
+
+        variables.forEach((name) => {
+          const td = document.createElement("td");
+          td.textContent = world[name] ? "T" : "F";
+          td.className = world[name] ? "truth-true" : "truth-false";
+          row.appendChild(td);
+        });
+
+        row.addEventListener("click", () => {
+          selectedWorldIndex = idx;
+          renderWorldTable();
+        });
+
+        worldTableBody.appendChild(row);
+      });
+
+      updateNarrative();
+    }
+
+    function updateStatus() {
+      const consistentCount = worlds.filter((w) => isConsistent(w)).length;
+      const activeRules = rules.filter((r) => r.active).length;
+      status.textContent = `${consistentCount} of ${worlds.length} worlds are consistent | ${activeRules} active rule(s)`;
+    }
+
+    function renderAll() {
+      renderVariableControls();
+      renderRuleControls();
+      renderWorldTable();
+      updateStatus();
+    }
+
+    resetAllBtn.addEventListener("click", () => {
+      variables.forEach((name) => {
+        assignment[name] = null;
+      });
+      rules.forEach((rule) => {
+        rule.active = rule.id === "r1" || rule.id === "r2";
+      });
+      renderAll();
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
