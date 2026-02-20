@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supervised Learning Sandbox</title>
+    <style>
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: #121212;
+  color: #f0f0f0;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.layout {
+  width: clamp(960px, 95vw, 1400px);
+  height: clamp(600px, 85vh, 900px);
+  display: flex;
+  gap: 2rem;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 200px;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* Left column section titles use the same typography as panel titles */
+.controls .panel-title {
+  margin: 0.25rem 0 0.5rem 0;
+  text-align: center;
+}
+
+/* Tweak spacing specifically around the Models section */
+.controls .control-separator + .panel-title {
+  /* more space above the label under the separator */
+  margin-top: 0.9rem;
+  /* slightly tighter space below the label */
+  margin-bottom: 0.25rem;
+}
+
+.controls .control-separator + .panel-title + .secondary-button {
+  /* reduce the default top margin to bring button closer to label */
+  margin-top: 0.4rem;
+}
+
+.control-row {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.control-button {
+  flex: 1;
+  font-size: clamp(1.25rem, 2vw, 2rem);
+  padding: 0.75rem 1.5rem;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 10px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.1s ease;
+}
+
+.control-button:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.control-button.selected {
+  background: rgba(99, 102, 241, 0.35);
+  border-color: #818cf8;
+  transform: translateY(-2px);
+}
+
+.control-separator {
+  margin-top: 1rem;
+  display: block;
+  height: 1px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.secondary-button {
+  margin-top: 1rem;
+  padding: 0.75rem 1.25rem;
+  width: 100%;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.1s ease;
+}
+
+.secondary-button:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.secondary-button.active {
+  background: rgba(14, 165, 233, 0.35);
+  border-color: rgba(125, 211, 252, 0.9);
+}
+
+.danger-button {
+  margin-top: 0.75rem;
+  padding: 0.6rem 1.1rem;
+  width: 100%;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  border: 2px solid rgba(248, 113, 113, 0.6);
+  background: rgba(248, 113, 113, 0.18);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.1s ease;
+}
+
+.danger-button:hover {
+  border-color: rgba(248, 113, 113, 0.85);
+  background: rgba(248, 113, 113, 0.28);
+}
+
+.stage {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+canvas {
+  flex: 1;
+  display: block;
+  border-radius: 12px;
+  background: #1c1f2b;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+  width: 100%;
+  height: 100%;
+  min-height: 520px;
+  max-width: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.model-panel {
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem; /* slightly tighter to avoid overflow */
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+  font-weight: normal; /* match other labels */
+}
+
+/* Center the Model Weights title in the right column */
+.model-panel .panel-title {
+  text-align: center;
+}
+
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.slider-label {
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+.slider-group input[type='range'] {
+  accent-color: #818cf8;
+}
+
+.slider-group input[type='range']:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.slider-value {
+  align-self: flex-end;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+  opacity: 0.75;
+}
+
+/* Numeric value coloring by sign */
+.slider-value.value-pos,
+#slope-value.value-pos,
+#intercept-value.value-pos,
+#bias-value.value-pos {
+  color: #22c55e; /* green */
+  opacity: 0.95;
+}
+.slider-value.value-neg,
+#slope-value.value-neg,
+#intercept-value.value-neg,
+#bias-value.value-neg {
+  color: #ef4444; /* red */
+  opacity: 0.95;
+}
+
+.loss-summary {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.loss-summary > .panel-title {
+  margin: 0.25rem 0 0.25rem 0;
+  text-align: center;
+}
+
+.loss-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.loss-label {
+  font-size: 0.9rem;
+  opacity: 0.75;
+}
+
+.loss-value {
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.hyperparameter-group {
+  margin-top: 0.5rem;
+}
+
+.optimize-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.optimize-button {
+  margin-top: 0.25rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  border: 2px solid rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.18);
+  color: inherit;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.1s ease;
+}
+
+.optimize-button.primary {
+  border-color: rgba(59, 130, 246, 0.6);
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.optimize-button.primary:hover {
+  border-color: rgba(59, 130, 246, 0.85);
+  background: rgba(59, 130, 246, 0.32);
+}
+
+.optimize-button.primary.busy {
+  border-color: rgba(59, 130, 246, 0.95);
+  background: rgba(59, 130, 246, 0.45);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25) inset, 0 0 12px rgba(59, 130, 246, 0.35);
+}
+
+.optimize-button.secondary {
+  border-color: rgba(248, 113, 113, 0.6);
+  background: rgba(248, 113, 113, 0.22);
+}
+
+.optimize-button.secondary:hover {
+  border-color: rgba(248, 113, 113, 0.85);
+  background: rgba(248, 113, 113, 0.3);
+}
+
+.optimize-button.full-width {
+  width: 100%;
+}
+
+.optimize-button:not(.primary):hover {
+  border-color: rgba(16, 185, 129, 0.8);
+  background: rgba(16, 185, 129, 0.28);
+  transform: translateY(-1px);
+}
+
+.optimize-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+/* Network diagram styles */
+.network-diagram {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  padding: 0; /* remove padding so SVG can fill box */
+}
+
+.network-diagram svg {
+  display: block;
+  height: 165px; /* tuned to prevent overflow */
+}
+/* Ensure hidden diagrams are not displayed even with display rules above */
+.network-diagram svg[hidden] {
+  display: none !important;
+}
+
+.node {
+  fill: #3b82f6; /* opaque */
+  stroke: #1d4ed8;
+  stroke-width: 2;
+}
+
+.node.output {
+  fill: #ea580c; /* opaque */
+  stroke: #c2410c;
+}
+
+.node-label {
+  font-size: 12px;
+  fill: #e5e7eb;
+  pointer-events: none;
+}
+
+.edge {
+  stroke: rgba(229, 231, 235, 0.9);
+  stroke-width: 4; /* slightly thicker for easier clicking */
+  cursor: pointer;
+}
+
+.edge.selected {
+  stroke-width: 5;
+  filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.75));
+}
+
+.hidden-legacy {
+  display: none;
+}
+
+/* Checkbox styling to match UI */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  opacity: 0.85;
+  user-select: none;
+}
+
+.checkbox-label input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #818cf8;
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 50;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(280px, 40vw, 420px);
+  background: #1f2433;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  z-index: 60;
+}
+
+.modal-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.modal-text {
+  margin: 0 0 0.75rem 0;
+  opacity: 0.85;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* Selection highlight for NN bias nodes */
+.node.selected {
+  stroke: #f59e0b;
+  stroke-width: 3;
+}
+</style>
+  </head>
+  <body>
+    <main class="layout">
+      <aside class="controls" aria-label="Drawing symbol selection">
+        <div class="panel-title">Data Points</div>
+        <div class="control-row">
+          <button type="button" data-symbol="X" class="control-button selected">X</button>
+          <button type="button" data-symbol="O" class="control-button">O</button>
+        </div>
+        <button type="button" class="danger-button" id="clear-points-button">Clear Points</button>
+        <span class="control-separator" aria-hidden="true"></span>
+        <div class="panel-title">Models</div>
+        <button type="button" class="secondary-button" id="linear-button">Linear Model</button>
+        <button type="button" class="secondary-button" id="nn-button">Two-Layer NN</button>
+        <span class="control-separator" aria-hidden="true"></span>
+        <div class="panel-title">Sessions</div>
+        <button type="button" class="secondary-button" id="save-canvas-button">Save Canvas</button>
+        <button type="button" class="secondary-button" id="load-canvas-button">Load Canvas</button>
+        <input type="file" id="load-file-input" accept="application/json" hidden />
+      </aside>
+      <section class="stage">
+        <canvas id="canvas" width="800" height="600" role="img" aria-label="Drawing canvas"></canvas>
+      </section>
+      <aside class="model-panel" aria-label="Linear model controls">
+        <h2 class="panel-title">Model Weights</h2>
+
+        <!-- Network Diagram -->
+        <div class="network-diagram" aria-label="Network diagram">
+          <!-- Linear model diagram -->
+          <svg id="linear-svg" viewBox="0 0 220 220" width="100%" height="180" role="img" aria-label="Two inputs to output">
+            <!-- Edges (expanded to fill more of the SVG) -->
+            <line id="edge-wx" data-edge="wx" x1="28" y1="80" x2="192" y2="110" class="edge" />
+            <line id="edge-wy" data-edge="wy" x1="28" y1="140" x2="192" y2="110" class="edge" />
+            <!-- Nodes -->
+            <circle cx="28" cy="80" r="18" class="node" />
+            <text x="28" y="85" text-anchor="middle" class="node-label">x</text>
+            <circle cx="28" cy="140" r="18" class="node" />
+            <text x="28" y="145" text-anchor="middle" class="node-label">y</text>
+            <circle id="linear-out-node" cx="192" cy="110" r="20" class="node output" />
+            <text x="192" y="115" text-anchor="middle" class="node-label">ŷ</text>
+          </svg>
+
+          <!-- Two-layer NN diagram (3 hidden nodes per layer, Sigmoid) -->
+          <svg id="nn-svg" viewBox="0 0 260 220" width="100%" height="180" role="img" aria-label="Two-layer neural network" hidden>
+            <!-- Layer positions: inputs at x=20, H1 at 100, H2 at 180, output at 240 -->
+            <!-- Inputs: x, y. No explicit bias nodes drawn. -->
+            <!-- Edges: Inputs fully connected to next layer -->
+            <!-- From inputs (x=20, y positions 80, 140) to H1 nodes (x=100, y=40,110,180) -->
+            <!-- x to H1 -->
+            <line data-edge="L1:x->h1" x1="20" y1="80" x2="100" y2="40" class="edge" />
+            <line data-edge="L1:x->h2" x1="20" y1="80" x2="100" y2="110" class="edge" />
+            <line data-edge="L1:x->h3" x1="20" y1="80" x2="100" y2="180" class="edge" />
+            <!-- y to H1 -->
+            <line data-edge="L1:y->h1" x1="20" y1="140" x2="100" y2="40" class="edge" />
+            <line data-edge="L1:y->h2" x1="20" y1="140" x2="100" y2="110" class="edge" />
+            <line data-edge="L1:y->h3" x1="20" y1="140" x2="100" y2="180" class="edge" />
+            
+            <!-- From H1 (x=100) to H2 nodes (x=180) -->
+            <line data-edge="L2:h1->h1" x1="100" y1="40" x2="180" y2="40" class="edge" />
+            <line data-edge="L2:h1->h2" x1="100" y1="40" x2="180" y2="110" class="edge" />
+            <line data-edge="L2:h1->h3" x1="100" y1="40" x2="180" y2="180" class="edge" />
+            <line data-edge="L2:h2->h1" x1="100" y1="110" x2="180" y2="40" class="edge" />
+            <line data-edge="L2:h2->h2" x1="100" y1="110" x2="180" y2="110" class="edge" />
+            <line data-edge="L2:h2->h3" x1="100" y1="110" x2="180" y2="180" class="edge" />
+            <line data-edge="L2:h3->h1" x1="100" y1="180" x2="180" y2="40" class="edge" />
+            <line data-edge="L2:h3->h2" x1="100" y1="180" x2="180" y2="110" class="edge" />
+            <line data-edge="L2:h3->h3" x1="100" y1="180" x2="180" y2="180" class="edge" />
+            
+            <!-- From H2 to output (x=240, y=110) -->
+            <line data-edge="L3:h1->out" x1="180" y1="40" x2="240" y2="110" class="edge" />
+            <line data-edge="L3:h2->out" x1="180" y1="110" x2="240" y2="110" class="edge" />
+            <line data-edge="L3:h3->out" x1="180" y1="180" x2="240" y2="110" class="edge" />
+
+            <!-- Nodes: inputs, biases, hidden layers, output -->
+            <circle cx="20" cy="80" r="12" class="node" />
+            <text x="20" y="84" text-anchor="middle" class="node-label">x</text>
+            <circle cx="20" cy="140" r="12" class="node" />
+            <text x="20" y="144" text-anchor="middle" class="node-label">y</text>
+
+            <circle cx="100" cy="40" r="12" class="node" data-bias="B1:h1" />
+            <circle cx="100" cy="110" r="12" class="node" data-bias="B1:h2" />
+            <circle cx="100" cy="180" r="12" class="node" data-bias="B1:h3" />
+
+            <circle cx="180" cy="40" r="12" class="node" data-bias="B2:h1" />
+            <circle cx="180" cy="110" r="12" class="node" data-bias="B2:h2" />
+            <circle cx="180" cy="180" r="12" class="node" data-bias="B2:h3" />
+
+            <circle cx="240" cy="110" r="14" class="node output" data-bias="B3:out" />
+            <text x="240" y="114" text-anchor="middle" class="node-label">ŷ</text>
+          </svg>
+        </div>
+
+        <!-- Contextual edge slider -->
+        <div class="slider-group" id="edge-slider-group" hidden>
+          <input type="range" id="edge-slider" step="any" disabled aria-describedby="edge-value" />
+          <span class="slider-value" id="edge-value">0.0</span>
+        </div>
+
+        <!-- Keep original sliders hidden to preserve logic and ranges -->
+        <div class="slider-group hidden-legacy">
+          <label class="slider-label" for="slope-slider">X Weight (w_x)</label>
+          <input type="range" id="slope-slider" min="-200" max="200" value="0" step="any" disabled aria-describedby="slope-value" />
+          <span class="slider-value" id="slope-value" data-value="slope">0.0</span>
+        </div>
+        <div class="slider-group hidden-legacy">
+          <label class="slider-label" for="intercept-slider">Y Weight (w_y)</label>
+          <input type="range" id="intercept-slider" min="-200" max="200" value="1" step="any" disabled aria-describedby="intercept-value" />
+          <span class="slider-value" id="intercept-value" data-value="intercept">0</span>
+        </div>
+        <div class="slider-group hidden-legacy">
+          <label class="slider-label" for="bias-slider">Bias (b)</label>
+          <input type="range" id="bias-slider" min="-20" max="20" value="0" step="any" disabled aria-describedby="bias-value" />
+          <span class="slider-value" id="bias-value">0.0</span>
+        </div>
+        <div class="loss-summary">
+          <div class="panel-title">Optimization</div>
+          <div class="loss-row">
+            <span class="loss-label">0‒1 Loss</span>
+            <span class="loss-value" id="loss-value">—</span>
+          </div>
+          <div class="loss-row">
+            <span class="loss-label">Binary Cross-Entropy</span>
+            <span class="loss-value" id="bce-value">—</span>
+          </div>
+          <div class="optimize-row">
+            <button type="button" id="optimize-step-button" class="optimize-button full-width" disabled>
+              One Step
+            </button>
+            <button type="button" id="optimize-button" class="optimize-button primary full-width" disabled>
+              1k Steps
+            </button>
+          </div>
+          <div class="optimize-row" aria-label="Animation control">
+            <label class="checkbox-label" for="animate-checkbox">
+              <input type="checkbox" id="animate-checkbox" />
+              Animate
+            </label>
+          </div>
+          <button type="button" id="reset-button" class="optimize-button secondary full-width">
+            Reset
+          </button>
+        </div>
+        <div class="slider-group hyperparameter-group">
+          <label class="slider-label" for="step-size-slider">Learning Rate</label>
+          <input
+            type="range"
+            id="step-size-slider"
+            min="0.01"
+            max="5"
+            value="1"
+            step="0.01"
+            disabled
+            aria-describedby="step-size-value"
+          />
+          <span class="slider-value" id="step-size-value">1.00</span>
+        </div>
+      </aside>
+    </main>
+    <!-- Clear confirmation modal -->
+    <div id="modal-backdrop" class="modal-backdrop" hidden></div>
+    <div id="confirm-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title" hidden>
+      <h3 id="confirm-title" class="modal-title">Clear all data points?</h3>
+      <p class="modal-text">This action will remove all points from the canvas.</p>
+      <div class="modal-actions">
+        <button type="button" id="confirm-clear" class="optimize-button secondary">Yes, clear</button>
+        <button type="button" id="cancel-clear" class="optimize-button">Cancel</button>
+      </div>
+    </div>
+    <script>
+"use strict";
+const canvas = document.getElementById('canvas');
+const controlButtons = Array.from(document.querySelectorAll('.control-button'));
+const linearModelButton = document.getElementById('linear-button');
+const nnModelButton = document.getElementById('nn-button');
+const wxSlider = document.getElementById('slope-slider'); // hidden legacy control
+const wySlider = document.getElementById('intercept-slider'); // hidden legacy control
+const bSlider = document.getElementById('bias-slider'); // hidden legacy control
+// Network diagram + contextual slider
+const linearSvg = document.getElementById('linear-svg');
+const nnSvg = document.getElementById('nn-svg');
+const edgeSliderGroup = document.getElementById('edge-slider-group');
+const edgeSlider = document.getElementById('edge-slider');
+const edgeValue = document.getElementById('edge-value');
+const wxValue = document.querySelector('[data-value="slope"]');
+const wyValue = document.querySelector('[data-value="intercept"]');
+const bValue = document.getElementById('bias-value');
+const lossValue = document.getElementById('loss-value');
+const bceValue = document.getElementById('bce-value');
+const optimizeStepButton = document.getElementById('optimize-step-button');
+const optimizeButton = document.getElementById('optimize-button');
+const resetButton = document.getElementById('reset-button');
+const clearPointsButton = document.getElementById('clear-points-button');
+const saveCanvasButton = document.getElementById('save-canvas-button');
+const loadCanvasButton = document.getElementById('load-canvas-button');
+const loadFileInput = document.getElementById('load-file-input');
+const stepSizeSlider = document.getElementById('step-size-slider');
+const stepSizeValue = document.getElementById('step-size-value');
+const animateCheckbox = document.getElementById('animate-checkbox');
+// Modal elements
+const modalBackdrop = document.getElementById('modal-backdrop');
+const confirmModal = document.getElementById('confirm-modal');
+const confirmClearBtn = document.getElementById('confirm-clear');
+const cancelClearBtn = document.getElementById('cancel-clear');
+if (!canvas) {
+    throw new Error('Missing canvas element in document.');
+}
+if (controlButtons.length === 0) {
+    throw new Error('No control buttons found.');
+}
+if (!linearModelButton ||
+    !nnModelButton ||
+    !wxSlider ||
+    !wySlider ||
+    !bSlider ||
+    !wxValue ||
+    !wyValue ||
+    !bValue ||
+    !lossValue ||
+    !bceValue ||
+    !optimizeStepButton ||
+    !optimizeButton ||
+    !resetButton ||
+    !clearPointsButton ||
+    !saveCanvasButton ||
+    !loadCanvasButton ||
+    !loadFileInput ||
+    !stepSizeSlider ||
+    !stepSizeValue ||
+    !animateCheckbox) {
+    throw new Error('Linear model controls are missing from the document.');
+}
+if (!linearSvg || !nnSvg || !edgeSliderGroup || !edgeSlider || !edgeValue) {
+    throw new Error('Network diagram controls are missing from the document.');
+}
+if (!modalBackdrop || !confirmModal || !confirmClearBtn || !cancelClearBtn) {
+    throw new Error('Modal controls are missing from the document.');
+}
+const ctx = canvas.getContext('2d');
+if (!ctx) {
+    throw new Error('Unable to acquire 2D rendering context.');
+}
+const dimensions = {
+    width: canvas.width,
+    height: canvas.height,
+    dpr: window.devicePixelRatio || 1
+};
+const drawings = [];
+let linearModelActive = false;
+let selectedSymbol = 'X';
+const symbolRadius = 12;
+const hitRadius = symbolRadius + 10;
+let draggingState = null;
+let suppressNextClick = false;
+const applySelectionState = (button) => {
+    controlButtons.forEach((other) => {
+        if (other === button) {
+            other.classList.add('selected');
+        }
+        else {
+            other.classList.remove('selected');
+        }
+    });
+};
+controlButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+        const symbol = button.dataset.symbol === 'O' ? 'O' : 'X';
+        selectedSymbol = symbol;
+        applySelectionState(button);
+    });
+});
+const applySignClass = (el, v) => {
+    if (!el)
+        return;
+    el.classList.remove('value-pos', 'value-neg');
+    if (v > 1e-12)
+        el.classList.add('value-pos');
+    else if (v < -1e-12)
+        el.classList.add('value-neg');
+};
+const updateSliderValueLabels = () => {
+    const wxNum = Number(wxSlider.value);
+    const wyNum = Number(wySlider.value);
+    const bNum = Number(bSlider.value);
+    wxValue.textContent = Number.isFinite(wxNum) ? wxNum.toFixed(3) : '0.000';
+    wyValue.textContent = Number.isFinite(wyNum) ? wyNum.toFixed(3) : '0.000';
+    if (bValue)
+        bValue.textContent = Number.isFinite(bNum) ? bNum.toFixed(3) : '0.000';
+    // color by sign for legacy labels
+    applySignClass(wxValue, wxNum);
+    applySignClass(wyValue, wyNum);
+    applySignClass(bValue, bNum);
+    // if a contextual edge is selected, mirror into its display
+    if (selectedEdgeLinear) {
+        const v = selectedEdgeLinear === 'wx' ? wxNum : selectedEdgeLinear === 'wy' ? wyNum : bNum;
+        edgeValue.textContent = Number.isFinite(v) ? v.toFixed(3) : '0.000';
+        applySignClass(edgeValue, v);
+    }
+    else if (selectedEdgeGeneric) {
+        const v = nnWeights.get(selectedEdgeGeneric.key) ?? 0;
+        edgeValue.textContent = Number(v).toFixed(3);
+        applySignClass(edgeValue, v);
+    }
+};
+const updateStepSizeLabel = () => {
+    const rawValue = Number(stepSizeSlider.value);
+    const normalized = Number.isFinite(rawValue) && rawValue > 0 ? rawValue : 1;
+    stepSizeValue.textContent = normalized.toFixed(2);
+};
+const getStepSize = () => {
+    const value = Number(stepSizeSlider.value);
+    if (!Number.isFinite(value) || value <= 0) {
+        return 1;
+    }
+    return value;
+};
+const EPSILON = 1e-7;
+// Update NN edge stroke classes and brightness based on weight sign and magnitude
+const updateNNEdgeColors = () => {
+    if (!nnSvg)
+        return;
+    const maxMag = 8; // scale for opacity mapping vs [-10,10]
+    const minOpacity = 0.35;
+    const maxOpacity = 1.0;
+    nnSvg.querySelectorAll('line[data-edge]').forEach((el) => {
+        const key = el.getAttribute('data-edge');
+        if (!key)
+            return;
+        const w = nnWeights.get(key) ?? 0;
+        el.classList.remove('pos', 'neg', 'zero');
+        if (w > 1e-6)
+            el.classList.add('pos');
+        else if (w < -1e-6)
+            el.classList.add('neg');
+        else
+            el.classList.add('zero');
+        const mag = Math.min(Math.abs(w) / maxMag, 1);
+        const opacity = (minOpacity + (maxOpacity - minOpacity) * mag).toFixed(2);
+        const lineEl = el;
+        lineEl.style.opacity = opacity;
+        // Always color edges by sign, even when selected.
+        if (w > 1e-6) {
+            lineEl.style.stroke = 'rgb(34, 197, 94)'; // green
+        }
+        else if (w < -1e-6) {
+            lineEl.style.stroke = 'rgb(239, 68, 68)'; // red
+        }
+        else {
+            lineEl.style.stroke = 'rgb(229, 231, 235)'; // neutral
+        }
+    });
+};
+// Update Linear edge coloring (sign + magnitude) similar to NN
+const updateLinearEdgeColors = () => {
+    if (!linearSvg)
+        return;
+    const edgeMap = [
+        { id: 'edge-wx', value: Number(wxSlider.value) },
+        { id: 'edge-wy', value: Number(wySlider.value) },
+    ];
+    const maxMag = 200; // slider range for wx/wy; bias smaller but mapped similarly
+    const minOpacity = 0.35;
+    const maxOpacity = 1.0;
+    edgeMap.forEach(({ id, value }) => {
+        const el = document.getElementById(id);
+        if (!el)
+            return;
+        el.classList.remove('pos', 'neg', 'zero');
+        if (value > 1e-6)
+            el.classList.add('pos');
+        else if (value < -1e-6)
+            el.classList.add('neg');
+        else
+            el.classList.add('zero');
+        const mag = Math.min(Math.abs(value) / maxMag, 1);
+        const opacity = (minOpacity + (maxOpacity - minOpacity) * mag).toFixed(2);
+        // Always color edges by sign, even when selected.
+        if (value > 1e-6)
+            el.style.stroke = 'rgb(34, 197, 94)';
+        else if (value < -1e-6)
+            el.style.stroke = 'rgb(239, 68, 68)';
+        else
+            el.style.stroke = 'rgb(229, 231, 235)';
+        el.style.opacity = opacity;
+    });
+};
+const evaluateModel = (wx, wy, b) => {
+    const epsilon = EPSILON;
+    let incorrect = 0;
+    let crossEntropySum = 0;
+    let gradWx = 0;
+    let gradWy = 0;
+    let gradB = 0;
+    drawings.forEach(({ symbol, x, y }) => {
+        const distance = wx * x + wy * y + b;
+        const probability = 1 / (1 + Math.exp(-distance));
+        const target = symbol === 'O' ? 1 : 0;
+        const clampedProbability = Math.min(Math.max(probability, epsilon), 1 - epsilon);
+        crossEntropySum += -(target * Math.log(clampedProbability) + (1 - target) * Math.log(1 - clampedProbability));
+        const error = probability - target;
+        gradWx += error * x;
+        gradWy += error * y;
+        gradB += error;
+        const predicted = probability >= 0.5 ? 'O' : 'X';
+        if (predicted !== symbol) {
+            incorrect += 1;
+        }
+    });
+    const sampleCount = drawings.length || 1;
+    gradWx /= sampleCount;
+    gradWy /= sampleCount;
+    gradB /= sampleCount;
+    return {
+        zeroOneLoss: incorrect / sampleCount,
+        crossEntropy: crossEntropySum / sampleCount,
+        gradWx,
+        gradWy,
+        gradB,
+        gradientNorm: Math.hypot(gradWx, gradWy, gradB)
+    };
+};
+const updateLossDisplay = (evaluation) => {
+    if (!lossValue || !bceValue) {
+        return;
+    }
+    if (!(linearModelActive || nnModelActive) || !evaluation || drawings.length === 0) {
+        lossValue.textContent = '—';
+        bceValue.textContent = '—';
+        return;
+    }
+    lossValue.textContent = evaluation.zeroOneLoss.toFixed(2);
+    bceValue.textContent = evaluation.crossEntropy.toFixed(3);
+};
+const getCurrentParameters = () => ({
+    wx: Number(wxSlider.value),
+    wy: Number(wySlider.value),
+    b: Number(bSlider.value)
+});
+let selectedEdgeLinear = null;
+let selectedEdgeGeneric = null;
+const nnWeights = new Map();
+const NN_EDGE_KEYS = [
+    // Layer 1
+    'L1:x->h1', 'L1:x->h2', 'L1:x->h3',
+    'L1:y->h1', 'L1:y->h2', 'L1:y->h3',
+    // Layer 2
+    'L2:h1->h1', 'L2:h1->h2', 'L2:h1->h3',
+    'L2:h2->h1', 'L2:h2->h2', 'L2:h2->h3',
+    'L2:h3->h1', 'L2:h3->h2', 'L2:h3->h3',
+    // Layer 3 (to output)
+    'L3:h1->out', 'L3:h2->out', 'L3:h3->out'
+];
+const NN_BIAS_KEYS = [
+    'B1:h1', 'B1:h2', 'B1:h3',
+    'B2:h1', 'B2:h2', 'B2:h3',
+    'B3:out'
+];
+const randomizeNNWeights = (scale = 0.2) => {
+    const rnd = () => (Math.random() - 0.5) * scale; // ~U(-scale/2, scale/2)
+    NN_EDGE_KEYS.forEach((k) => nnWeights.set(k, rnd()));
+    NN_BIAS_KEYS.forEach((k) => nnWeights.set(k, rnd()));
+};
+const initNNWeights = () => {
+    randomizeNNWeights(0.2);
+};
+// Quick probe to see if the NN logit crosses zero anywhere on the canvas
+const nnHasBoundary = () => {
+    const cols = 20;
+    const rows = 15;
+    const xMin = -1, xMax = 1, yMin = -1, yMax = 1;
+    const dx = (xMax - xMin) / cols;
+    const dy = (yMax - yMin) / rows;
+    let last = nnLogit(xMin, yMin);
+    for (let i = 0; i <= cols; i += 1) {
+        for (let j = 0; j <= rows; j += 1) {
+            const x = xMin + i * dx;
+            const y = yMin + j * dy;
+            const v = nnLogit(x, y);
+            if ((last > 0) !== (v > 0))
+                return true;
+            last = v;
+        }
+    }
+    return false;
+};
+// If the randomized NN has no sign change across the domain, try a few re-randomizations,
+// and only as a last resort, set a simple default separator.
+const ensureNNBoundary = () => {
+    if (nnHasBoundary())
+        return;
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+        randomizeNNWeights(0.2);
+        if (nnHasBoundary())
+            return;
+    }
+    // Fallback: simple separator roughly along x=0 using sigmoid hidden h1 and output
+    // Keep others small random but ensure a sign change by setting output bias negative
+    randomizeNNWeights(0.05);
+    nnWeights.set('L1:x->h1', 2.5);
+    nnWeights.set('B1:h1', 0);
+    nnWeights.set('L3:h1->out', 1);
+    nnWeights.set('B3:out', -0.5); // ensures z ≈ sigmoid(2.5x) - 0.5 crosses 0 near x≈0
+};
+const clearSelectionHighlight = () => {
+    document.querySelectorAll('.edge.selected').forEach((el) => el.classList.remove('selected'));
+    document.querySelectorAll('.node.selected').forEach((el) => el.classList.remove('selected'));
+};
+const setSelectedEdgeLinear = (edge) => {
+    selectedEdgeLinear = edge;
+    clearSelectionHighlight();
+    if (edge) {
+        const id = edge === 'wx' ? 'edge-wx' : edge === 'wy' ? 'edge-wy' : 'edge-b';
+        const el = document.getElementById(id);
+        if (edge === 'b') {
+            const outNode = document.getElementById('linear-out-node');
+            if (outNode)
+                outNode.classList.add('selected');
+        }
+        else if (el) {
+            el.classList.add('selected');
+        }
+    }
+    if (!edge || !linearModelActive) {
+        edgeSliderGroup.hidden = true;
+        edgeSlider.disabled = true;
+        if (edgeValue) {
+            edgeValue.textContent = '';
+            edgeValue.classList.remove('value-pos', 'value-neg');
+        }
+        return;
+    }
+    let min, max, value;
+    if (edge === 'wx') {
+        min = Number(wxSlider.min);
+        max = Number(wxSlider.max);
+        value = Number(wxSlider.value);
+    }
+    else if (edge === 'wy') {
+        min = Number(wySlider.min);
+        max = Number(wySlider.max);
+        value = Number(wySlider.value);
+    }
+    else {
+        min = Number(bSlider.min);
+        max = Number(bSlider.max);
+        value = Number(bSlider.value);
+    }
+    edgeSlider.min = String(min);
+    edgeSlider.max = String(max);
+    edgeSlider.step = 'any';
+    edgeSlider.value = String(value);
+    edgeValue.textContent = Number(value).toFixed(3);
+    applySignClass(edgeValue, value);
+    edgeSlider.disabled = !linearModelActive;
+    edgeSliderGroup.hidden = false;
+};
+const setSelectedEdgeGeneric = (key, el) => {
+    selectedEdgeGeneric = key && el ? { key, el } : null;
+    clearSelectionHighlight();
+    if (!key || !el) {
+        edgeSliderGroup.hidden = true;
+        edgeSlider.disabled = true;
+        if (edgeValue) {
+            edgeValue.textContent = '';
+            edgeValue.classList.remove('value-pos', 'value-neg');
+        }
+        return;
+    }
+    el.classList.add('selected');
+    const value = nnWeights.has(key) ? nnWeights.get(key) : 0;
+    edgeSlider.min = String(-10);
+    edgeSlider.max = String(10);
+    edgeSlider.step = 'any';
+    edgeSlider.value = String(value);
+    edgeValue.textContent = Number(value).toFixed(3);
+    applySignClass(edgeValue, value);
+    edgeSlider.disabled = false;
+    edgeSliderGroup.hidden = false;
+};
+let selectedNNBias = null;
+const setSelectedBias = (key, el) => {
+    selectedNNBias = key && el ? { key, el } : null;
+    clearSelectionHighlight();
+    if (!key || !el) {
+        edgeSliderGroup.hidden = true;
+        edgeSlider.disabled = true;
+        if (edgeValue) {
+            edgeValue.textContent = '';
+            edgeValue.classList.remove('value-pos', 'value-neg');
+        }
+        return;
+    }
+    el.classList.add('selected');
+    const value = nnWeights.has(key) ? nnWeights.get(key) : 0;
+    edgeSlider.min = String(-5);
+    edgeSlider.max = String(5);
+    edgeSlider.step = 'any';
+    edgeSlider.value = String(value);
+    edgeValue.textContent = Number(value).toFixed(3);
+    applySignClass(edgeValue, value);
+    edgeSlider.disabled = false;
+    edgeSliderGroup.hidden = false;
+};
+// ---------------- NN optimization (SGD on BCE with sigmoid output) ----------------
+const runNNGradientDescent = (iterations) => {
+    if (!nnModelActive || drawings.length === 0)
+        return;
+    const lr = Math.max(getStepSize(), 1e-6);
+    for (let iter = 0; iter < iterations; iter += 1) {
+        // Accumulators
+        const grad = new Map();
+        const addg = (k, v) => grad.set(k, (grad.get(k) ?? 0) + v);
+        drawings.forEach(({ symbol, x, y }) => {
+            const t = symbol === 'O' ? 1 : 0;
+            // Forward pass
+            const a1_h1 = (nnWeights.get('L1:x->h1') ?? 0) * x + (nnWeights.get('L1:y->h1') ?? 0) * y + (nnWeights.get('B1:h1') ?? 0);
+            const a1_h2 = (nnWeights.get('L1:x->h2') ?? 0) * x + (nnWeights.get('L1:y->h2') ?? 0) * y + (nnWeights.get('B1:h2') ?? 0);
+            const a1_h3 = (nnWeights.get('L1:x->h3') ?? 0) * x + (nnWeights.get('L1:y->h3') ?? 0) * y + (nnWeights.get('B1:h3') ?? 0);
+            const h1 = sigmoid(a1_h1);
+            const h2 = sigmoid(a1_h2);
+            const h3 = sigmoid(a1_h3);
+            const a2_g1 = (nnWeights.get('L2:h1->h1') ?? 0) * h1 + (nnWeights.get('L2:h2->h1') ?? 0) * h2 + (nnWeights.get('L2:h3->h1') ?? 0) * h3 + (nnWeights.get('B2:h1') ?? 0);
+            const a2_g2 = (nnWeights.get('L2:h1->h2') ?? 0) * h1 + (nnWeights.get('L2:h2->h2') ?? 0) * h2 + (nnWeights.get('L2:h3->h2') ?? 0) * h3 + (nnWeights.get('B2:h2') ?? 0);
+            const a2_g3 = (nnWeights.get('L2:h1->h3') ?? 0) * h1 + (nnWeights.get('L2:h2->h3') ?? 0) * h2 + (nnWeights.get('L2:h3->h3') ?? 0) * h3 + (nnWeights.get('B2:h3') ?? 0);
+            const g1 = sigmoid(a2_g1);
+            const g2 = sigmoid(a2_g2);
+            const g3 = sigmoid(a2_g3);
+            const z = (nnWeights.get('L3:h1->out') ?? 0) * g1 + (nnWeights.get('L3:h2->out') ?? 0) * g2 + (nnWeights.get('L3:h3->out') ?? 0) * g3 + (nnWeights.get('B3:out') ?? 0);
+            const p = 1 / (1 + Math.exp(-z));
+            // Backward pass
+            const dz = p - t; // dL/dz
+            addg('L3:h1->out', dz * g1);
+            addg('L3:h2->out', dz * g2);
+            addg('L3:h3->out', dz * g3);
+            addg('B3:out', dz);
+            const dg1 = dz * (nnWeights.get('L3:h1->out') ?? 0);
+            const dg2 = dz * (nnWeights.get('L3:h2->out') ?? 0);
+            const dg3 = dz * (nnWeights.get('L3:h3->out') ?? 0);
+            const da2_g1 = dg1 * g1 * (1 - g1);
+            const da2_g2 = dg2 * g2 * (1 - g2);
+            const da2_g3 = dg3 * g3 * (1 - g3);
+            addg('L2:h1->h1', da2_g1 * h1);
+            addg('L2:h2->h1', da2_g1 * h2);
+            addg('L2:h3->h1', da2_g1 * h3);
+            addg('B2:h1', da2_g1);
+            addg('L2:h1->h2', da2_g2 * h1);
+            addg('L2:h2->h2', da2_g2 * h2);
+            addg('L2:h3->h2', da2_g2 * h3);
+            addg('B2:h2', da2_g2);
+            addg('L2:h1->h3', da2_g3 * h1);
+            addg('L2:h2->h3', da2_g3 * h2);
+            addg('L2:h3->h3', da2_g3 * h3);
+            addg('B2:h3', da2_g3);
+            const dh1 = da2_g1 * (nnWeights.get('L2:h1->h1') ?? 0) + da2_g2 * (nnWeights.get('L2:h1->h2') ?? 0) + da2_g3 * (nnWeights.get('L2:h1->h3') ?? 0);
+            const dh2 = da2_g1 * (nnWeights.get('L2:h2->h1') ?? 0) + da2_g2 * (nnWeights.get('L2:h2->h2') ?? 0) + da2_g3 * (nnWeights.get('L2:h2->h3') ?? 0);
+            const dh3 = da2_g1 * (nnWeights.get('L2:h3->h1') ?? 0) + da2_g2 * (nnWeights.get('L2:h3->h2') ?? 0) + da2_g3 * (nnWeights.get('L2:h3->h3') ?? 0);
+            const da1_h1 = dh1 * h1 * (1 - h1);
+            const da1_h2 = dh2 * h2 * (1 - h2);
+            const da1_h3 = dh3 * h3 * (1 - h3);
+            addg('L1:x->h1', da1_h1 * x);
+            addg('L1:y->h1', da1_h1 * y);
+            addg('B1:h1', da1_h1);
+            addg('L1:x->h2', da1_h2 * x);
+            addg('L1:y->h2', da1_h2 * y);
+            addg('B1:h2', da1_h2);
+            addg('L1:x->h3', da1_h3 * x);
+            addg('L1:y->h3', da1_h3 * y);
+            addg('B1:h3', da1_h3);
+        });
+        // Average gradients and update
+        const n = Math.max(drawings.length, 1);
+        const clampEdge = (v) => Math.max(-10, Math.min(10, v));
+        const clampBias = (v) => Math.max(-5, Math.min(5, v));
+        NN_EDGE_KEYS.forEach((k) => {
+            const g = (grad.get(k) ?? 0) / n;
+            nnWeights.set(k, clampEdge((nnWeights.get(k) ?? 0) - lr * g));
+        });
+        NN_BIAS_KEYS.forEach((k) => {
+            const g = (grad.get(k) ?? 0) / n;
+            nnWeights.set(k, clampBias((nnWeights.get(k) ?? 0) - lr * g));
+        });
+    }
+    redrawScene();
+    updateNNEdgeColors();
+};
+const computePlane = (params) => ({ wx: params.wx, wy: params.wy, b: params.b });
+const snapToStep = (value, min, step) => {
+    if (!Number.isFinite(step) || step <= 0) {
+        return value;
+    }
+    const origin = Number.isFinite(min) ? min : 0;
+    return origin + Math.round((value - origin) / step) * step;
+};
+const resizeCanvas = () => {
+    dimensions.dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    dimensions.width = rect.width;
+    dimensions.height = rect.height;
+    canvas.width = Math.round(rect.width * dimensions.dpr);
+    canvas.height = Math.round(rect.height * dimensions.dpr);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dimensions.dpr, dimensions.dpr);
+};
+const drawBackground = () => {
+    ctx.fillStyle = '#1c1f2b';
+    ctx.fillRect(0, 0, dimensions.width, dimensions.height);
+};
+// Classification region shading
+const drawClassificationRegions = (deltaFn) => {
+    const cols = 96;
+    const rows = 72;
+    const xMin = -1;
+    const xMax = 1;
+    const yMin = -1;
+    const yMax = 1;
+    const dx = (xMax - xMin) / cols;
+    const dy = (yMax - yMin) / rows;
+    for (let i = 0; i < cols; i += 1) {
+        for (let j = 0; j < rows; j += 1) {
+            const x0 = xMin + i * dx;
+            const y0 = yMin + j * dy;
+            const x1 = xMin + (i + 1) * dx;
+            const y1 = yMin + (j + 1) * dy;
+            const v = deltaFn((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+            // Blue-ish for X (class 0), Yellow-ish for O (class 1)
+            ctx.fillStyle = v >= 0 ? 'rgba(253, 230, 138, 0.10)' : 'rgba(96, 165, 250, 0.10)';
+            const a = toCanvasCoordinates(x0, y0);
+            const b = toCanvasCoordinates(x1, y1);
+            const left = Math.min(a.x, b.x);
+            const top = Math.min(a.y, b.y);
+            const width = Math.abs(b.x - a.x);
+            const height = Math.abs(b.y - a.y);
+            ctx.fillRect(left, top, width, height);
+        }
+    }
+};
+const drawLinearModel = (line) => {
+    const { wx, wy, b } = line;
+    const intersections = [];
+    if (Math.abs(wy) > 1e-8) {
+        const yAtLeft = (-b - wx * -1) / wy;
+        if (yAtLeft >= -1 && yAtLeft <= 1) {
+            intersections.push({ x: -1, y: yAtLeft });
+        }
+        const yAtRight = (-b - wx * 1) / wy;
+        if (yAtRight >= -1 && yAtRight <= 1) {
+            intersections.push({ x: 1, y: yAtRight });
+        }
+    }
+    if (Math.abs(wx) > 1e-8) {
+        const xAtBottom = (-b - wy * -1) / wx;
+        if (xAtBottom >= -1 && xAtBottom <= 1) {
+            intersections.push({ x: xAtBottom, y: -1 });
+        }
+        const xAtTop = (-b - wy * 1) / wx;
+        if (xAtTop >= -1 && xAtTop <= 1) {
+            intersections.push({ x: xAtTop, y: 1 });
+        }
+    }
+    const uniquePoints = intersections.reduce((acc, point) => {
+        const key = `${point.x.toFixed(4)}:${point.y.toFixed(4)}`;
+        if (!acc.some((existing) => `${existing.x.toFixed(4)}:${existing.y.toFixed(4)}` === key)) {
+            acc.push(point);
+        }
+        return acc;
+    }, []);
+    if (uniquePoints.length < 2) {
+        return;
+    }
+    uniquePoints.sort((a, b) => a.x - b.x || a.y - b.y);
+    const start = toCanvasCoordinates(uniquePoints[0].x, uniquePoints[0].y);
+    const end = toCanvasCoordinates(uniquePoints[uniquePoints.length - 1].x, uniquePoints[uniquePoints.length - 1].y);
+    ctx.strokeStyle = '#f97316';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(end.x, end.y);
+    ctx.stroke();
+};
+const getSymbolColor = (drawing, line, deltaFn) => {
+    const baseColor = drawing.symbol === 'X' ? '#fef08a' : '#fca5a5';
+    if ((linearModelActive && !line) || (!linearModelActive && !deltaFn)) {
+        return baseColor;
+    }
+    let delta;
+    if (line) {
+        const { wx, wy, b } = line;
+        delta = wx * drawing.x + wy * drawing.y + b;
+    }
+    else if (deltaFn) {
+        delta = deltaFn(drawing.x, drawing.y);
+    }
+    else {
+        return baseColor;
+    }
+    const onLineThreshold = (1.5 * 2) / (dimensions.height || 1);
+    if (Math.abs(delta) <= onLineThreshold) {
+        return '#facc15'; // golden highlight for points on the decision boundary
+    }
+    const isAboveLine = delta > 0;
+    const correctColor = '#4ade80';
+    const incorrectColor = '#f87171';
+    if (drawing.symbol === 'X') {
+        return isAboveLine ? incorrectColor : correctColor;
+    }
+    // O is opposite of X
+    return isAboveLine ? correctColor : incorrectColor;
+};
+const drawSymbol = (drawing, line, deltaFn) => {
+    const { symbol, x, y } = drawing;
+    const canvasPoint = toCanvasCoordinates(x, y);
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = getSymbolColor(drawing, line, deltaFn);
+    if (symbol === 'X') {
+        ctx.beginPath();
+        ctx.moveTo(canvasPoint.x - symbolRadius, canvasPoint.y - symbolRadius);
+        ctx.lineTo(canvasPoint.x + symbolRadius, canvasPoint.y + symbolRadius);
+        ctx.moveTo(canvasPoint.x + symbolRadius, canvasPoint.y - symbolRadius);
+        ctx.lineTo(canvasPoint.x - symbolRadius, canvasPoint.y + symbolRadius);
+        ctx.stroke();
+    }
+    else {
+        ctx.beginPath();
+        ctx.arc(canvasPoint.x, canvasPoint.y, symbolRadius, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+};
+const updateOptimizeAvailability = () => {
+    const buttonsDisabled = !((linearModelActive || nnModelActive) && drawings.length > 0);
+    // Keep disabled while animating to avoid re-enables from redraws
+    optimizeStepButton.disabled = optimizingAnimation ? true : buttonsDisabled;
+    optimizeButton.disabled = optimizingAnimation ? true : buttonsDisabled;
+    // Allow adjusting step size for both models
+    stepSizeSlider.disabled = !(linearModelActive || nnModelActive);
+    // contextual slider enabled if any selection exists (edge or bias)
+    edgeSlider.disabled = !(!!selectedEdgeLinear || !!selectedEdgeGeneric || !!selectedNNBias);
+};
+// ---------------- NN decision boundary (sigmoid hidden units) ----------------
+const sigmoid = (v) => 1 / (1 + Math.exp(-v));
+const nnLogit = (x, y) => {
+    // Layer 1: h1, h2, h3
+    const h1 = sigmoid((nnWeights.get('L1:x->h1') ?? 0) * x +
+        (nnWeights.get('L1:y->h1') ?? 0) * y +
+        (nnWeights.get('B1:h1') ?? 0));
+    const h2 = sigmoid((nnWeights.get('L1:x->h2') ?? 0) * x +
+        (nnWeights.get('L1:y->h2') ?? 0) * y +
+        (nnWeights.get('B1:h2') ?? 0));
+    const h3 = sigmoid((nnWeights.get('L1:x->h3') ?? 0) * x +
+        (nnWeights.get('L1:y->h3') ?? 0) * y +
+        (nnWeights.get('B1:h3') ?? 0));
+    // Layer 2: three hidden nodes
+    const g1 = sigmoid((nnWeights.get('L2:h1->h1') ?? 0) * h1 +
+        (nnWeights.get('L2:h2->h1') ?? 0) * h2 +
+        (nnWeights.get('L2:h3->h1') ?? 0) * h3 +
+        (nnWeights.get('B2:h1') ?? 0));
+    const g2 = sigmoid((nnWeights.get('L2:h1->h2') ?? 0) * h1 +
+        (nnWeights.get('L2:h2->h2') ?? 0) * h2 +
+        (nnWeights.get('L2:h3->h2') ?? 0) * h3 +
+        (nnWeights.get('B2:h2') ?? 0));
+    const g3 = sigmoid((nnWeights.get('L2:h1->h3') ?? 0) * h1 +
+        (nnWeights.get('L2:h2->h3') ?? 0) * h2 +
+        (nnWeights.get('L2:h3->h3') ?? 0) * h3 +
+        (nnWeights.get('B2:h3') ?? 0));
+    // Output logit (no bias)
+    const z = (nnWeights.get('L3:h1->out') ?? 0) * g1 +
+        (nnWeights.get('L3:h2->out') ?? 0) * g2 +
+        (nnWeights.get('L3:h3->out') ?? 0) * g3 +
+        (nnWeights.get('B3:out') ?? 0);
+    return z;
+};
+const drawNNDecisionBoundary = () => {
+    const cols = 96;
+    const rows = 72;
+    const xMin = -1;
+    const xMax = 1;
+    const yMin = -1;
+    const yMax = 1;
+    const dx = (xMax - xMin) / cols;
+    const dy = (yMax - yMin) / rows;
+    ctx.strokeStyle = '#f97316';
+    ctx.lineWidth = 2.5;
+    const interp = (x1, y1, v1, x2, y2, v2) => {
+        const denom = v1 - v2;
+        const t = Math.abs(denom) < 1e-12 ? 0.5 : v1 / denom;
+        return { x: x1 + t * (x2 - x1), y: y1 + t * (y2 - y1) };
+    };
+    for (let i = 0; i < cols; i += 1) {
+        for (let j = 0; j < rows; j += 1) {
+            const x0 = xMin + i * dx;
+            const y0 = yMin + j * dy;
+            const x1 = xMin + (i + 1) * dx;
+            const y1 = yMin + (j + 1) * dy;
+            // Corner values: bl(v00), br(v10), tr(v11), tl(v01)
+            const v_bl = nnLogit(x0, y0);
+            const v_br = nnLogit(x1, y0);
+            const v_tr = nnLogit(x1, y1);
+            const v_tl = nnLogit(x0, y1);
+            // Determine intersections along edges where sign changes
+            const pts = [];
+            const s = (a, b) => (a === 0 || b === 0 ? (a === 0 && b === 0 ? 0 : 1) : (a > 0) !== (b > 0) ? 1 : 0);
+            // bottom edge: (x0,y0)-(x1,y0)
+            if (s(v_bl, v_br))
+                pts.push(interp(x0, y0, v_bl, x1, y0, v_br));
+            // right edge: (x1,y0)-(x1,y1)
+            if (s(v_br, v_tr))
+                pts.push(interp(x1, y0, v_br, x1, y1, v_tr));
+            // top edge: (x0,y1)-(x1,y1)
+            if (s(v_tl, v_tr))
+                pts.push(interp(x0, y1, v_tl, x1, y1, v_tr));
+            // left edge: (x0,y0)-(x0,y1)
+            if (s(v_bl, v_tl))
+                pts.push(interp(x0, y0, v_bl, x0, y1, v_tl));
+            if (pts.length === 2) {
+                const a = toCanvasCoordinates(pts[0].x, pts[0].y);
+                const b = toCanvasCoordinates(pts[1].x, pts[1].y);
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.stroke();
+            }
+            else if (pts.length === 4) {
+                // Ambiguous case: draw two segments pairing closest points
+                const a = toCanvasCoordinates(pts[0].x, pts[0].y);
+                const b = toCanvasCoordinates(pts[1].x, pts[1].y);
+                const c = toCanvasCoordinates(pts[2].x, pts[2].y);
+                const d = toCanvasCoordinates(pts[3].x, pts[3].y);
+                // Pair (a-b) and (c-d)
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(c.x, c.y);
+                ctx.lineTo(d.x, d.y);
+                ctx.stroke();
+            }
+        }
+    }
+};
+const evaluateNN = () => {
+    if (drawings.length === 0)
+        return { zeroOneLoss: 0, crossEntropy: 0 };
+    const epsilon = EPSILON;
+    let incorrect = 0;
+    let crossEntropySum = 0;
+    drawings.forEach(({ symbol, x, y }) => {
+        const z = nnLogit(x, y);
+        const p = 1 / (1 + Math.exp(-z));
+        const target = symbol === 'O' ? 1 : 0;
+        const clamped = Math.min(Math.max(p, epsilon), 1 - epsilon);
+        crossEntropySum += -(target * Math.log(clamped) + (1 - target) * Math.log(1 - clamped));
+        const predicted = p >= 0.5 ? 'O' : 'X';
+        if (predicted !== symbol)
+            incorrect += 1;
+    });
+    const n = drawings.length;
+    return { zeroOneLoss: incorrect / n, crossEntropy: crossEntropySum / n };
+};
+const redrawScene = () => {
+    const params = getCurrentParameters();
+    const line = linearModelActive ? computePlane(params) : undefined;
+    const evaluation = drawings.length > 0 ? (linearModelActive ? evaluateModel(params.wx, params.wy, params.b) : nnModelActive ? evaluateNN() : undefined) : undefined;
+    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+    drawBackground();
+    // region shading for active model
+    if (linearModelActive && line) {
+        drawClassificationRegions((x, y) => line.wx * x + line.wy * y + line.b);
+    }
+    else if (nnModelActive) {
+        drawClassificationRegions(nnLogit);
+    }
+    if (line) {
+        drawLinearModel(line);
+    }
+    else if (nnModelActive) {
+        drawNNDecisionBoundary();
+    }
+    const deltaFn = nnModelActive ? nnLogit : undefined;
+    drawings.forEach((drawing) => drawSymbol(drawing, line, deltaFn));
+    updateLossDisplay(evaluation);
+    updateOptimizeAvailability();
+};
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+const getPointerPosition = (event) => {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+    };
+};
+const normalizeCanvasPoint = (x, y) => {
+    const width = dimensions.width || 1;
+    const height = dimensions.height || 1;
+    const normalizedX = (x / width) * 2 - 1;
+    const normalizedY = 1 - (y / height) * 2;
+    return { x: normalizedX, y: normalizedY };
+};
+const clampNormalizedPoint = (x, y) => {
+    const width = dimensions.width || 1;
+    const height = dimensions.height || 1;
+    const marginX = Math.min(((symbolRadius + 8) * 2) / width, 0.99);
+    const marginY = Math.min(((symbolRadius + 8) * 2) / height, 0.99);
+    const minX = -1 + marginX;
+    const maxX = 1 - marginX;
+    const minY = -1 + marginY;
+    const maxY = 1 - marginY;
+    return {
+        x: clamp(x, minX, maxX),
+        y: clamp(y, minY, maxY)
+    };
+};
+const toCanvasCoordinates = (x, y) => {
+    const width = dimensions.width || 1;
+    const height = dimensions.height || 1;
+    return {
+        x: ((x + 1) * 0.5) * width,
+        y: ((1 - y) * 0.5) * height
+    };
+};
+const getNormalizedPointFromEvent = (event) => {
+    const { x, y } = getPointerPosition(event);
+    const normalized = normalizeCanvasPoint(x, y);
+    return clampNormalizedPoint(normalized.x, normalized.y);
+};
+const handleCanvasClick = (event) => {
+    if (suppressNextClick) {
+        suppressNextClick = false;
+        return;
+    }
+    const { x, y } = getNormalizedPointFromEvent(event);
+    drawings.push({ symbol: selectedSymbol, x, y });
+    redrawScene();
+};
+const findDrawingAtPosition = (x, y) => {
+    for (let i = drawings.length - 1; i >= 0; i -= 1) {
+        const drawing = drawings[i];
+        const canvasPosition = toCanvasCoordinates(drawing.x, drawing.y);
+        const dx = x - canvasPosition.x;
+        const dy = y - canvasPosition.y;
+        if (Math.hypot(dx, dy) <= hitRadius) {
+            return drawing;
+        }
+    }
+    return undefined;
+};
+const handlePointerDown = (event) => {
+    const { x, y } = getPointerPosition(event);
+    const drawing = findDrawingAtPosition(x, y);
+    if (drawing) {
+        suppressNextClick = true;
+        draggingState = { drawing, pointerId: event.pointerId };
+        canvas.setPointerCapture(event.pointerId);
+    }
+    else {
+        suppressNextClick = false;
+    }
+};
+const handlePointerMove = (event) => {
+    if (!draggingState || draggingState.pointerId !== event.pointerId) {
+        return;
+    }
+    const normalized = getNormalizedPointFromEvent(event);
+    draggingState.drawing.x = normalized.x;
+    draggingState.drawing.y = normalized.y;
+    redrawScene();
+};
+const endDrag = (event) => {
+    if (!draggingState || draggingState.pointerId !== event.pointerId) {
+        return;
+    }
+    canvas.releasePointerCapture(event.pointerId);
+    draggingState = null;
+    suppressNextClick = true;
+    redrawScene();
+};
+const handlePointerUp = (event) => {
+    endDrag(event);
+};
+const handlePointerCancel = (event) => {
+    endDrag(event);
+};
+const applyBounds = (value, min, max) => {
+    let result = value;
+    if (Number.isFinite(min)) {
+        result = Math.max(result, min);
+    }
+    if (Number.isFinite(max)) {
+        result = Math.min(result, max);
+    }
+    return result;
+};
+const runGradientDescent = (iterations, _options = {}) => {
+    if (!linearModelActive || drawings.length === 0) {
+        return;
+    }
+    let { wx, wy, b } = getCurrentParameters();
+    const learningRate = Math.max(getStepSize(), 1e-6);
+    const wxMin = Number(wxSlider.min);
+    const wxMax = Number(wxSlider.max);
+    const wyMin = Number(wySlider.min);
+    const wyMax = Number(wySlider.max);
+    const bMin = Number(bSlider.min);
+    const bMax = Number(bSlider.max);
+    let evaluation = evaluateModel(wx, wy, b);
+    for (let iteration = 0; iteration < iterations; iteration += 1) {
+        const nextWx = applyBounds(wx - learningRate * evaluation.gradWx, wxMin, wxMax);
+        const nextWy = applyBounds(wy - learningRate * evaluation.gradWy, wyMin, wyMax);
+        const nextB = applyBounds(b - learningRate * evaluation.gradB, bMin, bMax);
+        wx = nextWx;
+        wy = nextWy;
+        b = nextB;
+        evaluation = evaluateModel(wx, wy, b);
+        if (evaluation.gradientNorm < 1e-10)
+            break;
+    }
+    const wxStepRaw = Number(wxSlider.step);
+    const wyStepRaw = Number(wySlider.step);
+    const bStepRaw = Number(bSlider.step);
+    const wxStep = Number.isFinite(wxStepRaw) && wxStepRaw > 0 ? wxStepRaw : 0;
+    const wyStep = Number.isFinite(wyStepRaw) && wyStepRaw > 0 ? wyStepRaw : 0;
+    const bStep = Number.isFinite(bStepRaw) && bStepRaw > 0 ? bStepRaw : 0;
+    wx = snapToStep(wx, wxMin, wxStep);
+    wy = snapToStep(wy, wyMin, wyStep);
+    b = snapToStep(b, bMin, bStep);
+    wxSlider.value = String(wx);
+    wySlider.value = String(wy);
+    bSlider.value = String(b);
+    updateSliderValueLabels();
+    redrawScene();
+    updateLinearEdgeColors();
+};
+const handleOptimizationStep = () => {
+    if (linearModelActive) {
+        runGradientDescent(1);
+    }
+    else if (nnModelActive) {
+        runNNGradientDescent(1);
+    }
+};
+let optimizingAnimation = false;
+const handleOptimize = () => {
+    if (!(linearModelActive || nnModelActive))
+        return;
+    // If animate is unchecked, perform 1000 steps immediately
+    if (!animateCheckbox.checked) {
+        // Provide visible feedback even for instant runs
+        optimizeButton.classList.add('busy');
+        try {
+            if (linearModelActive)
+                runGradientDescent(1000);
+            else if (nnModelActive)
+                runNNGradientDescent(1000);
+        }
+        finally {
+            optimizeButton.classList.remove('busy');
+            updateOptimizeAvailability();
+        }
+        return;
+    }
+    if (optimizingAnimation)
+        return; // prevent concurrent animations
+    optimizingAnimation = true;
+    let remaining = 1000;
+    // Disable action buttons while animating
+    optimizeButton.disabled = true;
+    optimizeStepButton.disabled = true;
+    // Highlight optimize button while running
+    optimizeButton.classList.add('busy');
+    const tick = () => {
+        if (!(linearModelActive || nnModelActive)) {
+            optimizingAnimation = false;
+            optimizeButton.classList.remove('busy');
+            updateOptimizeAvailability();
+            return;
+        }
+        if (remaining <= 0) {
+            optimizingAnimation = false;
+            optimizeButton.classList.remove('busy');
+            updateOptimizeAvailability();
+            return;
+        }
+        // Execute one step and schedule next frame
+        if (linearModelActive)
+            runGradientDescent(1);
+        else if (nnModelActive)
+            runNNGradientDescent(1);
+        remaining -= 1;
+        // If user unchecks animation mid-way, finish instantly
+        if (!animateCheckbox.checked && remaining > 0) {
+            if (linearModelActive)
+                runGradientDescent(remaining);
+            else if (nnModelActive)
+                runNNGradientDescent(remaining);
+            remaining = 0;
+        }
+        if (remaining > 0) {
+            // Schedule next frame; also set a timeout fallback
+            requestAnimationFrame(tick);
+            setTimeout(() => { if (optimizingAnimation)
+                tick(); }, 100);
+        }
+        else {
+            optimizingAnimation = false;
+            optimizeButton.classList.remove('busy');
+            updateOptimizeAvailability();
+        }
+    };
+    requestAnimationFrame(tick);
+};
+let nnModelActive = false;
+const setActiveModel = (mode) => {
+    linearModelActive = mode === 'linear';
+    nnModelActive = mode === 'nn';
+    // Button states
+    linearModelButton.classList.toggle('active', linearModelActive);
+    nnModelButton.classList.toggle('active', nnModelActive);
+    // Diagram visibility (exactly one visible)
+    if (linearSvg) {
+        if (linearModelActive)
+            linearSvg.removeAttribute('hidden');
+        else
+            linearSvg.setAttribute('hidden', '');
+    }
+    if (nnSvg) {
+        if (nnModelActive)
+            nnSvg.removeAttribute('hidden');
+        else
+            nnSvg.setAttribute('hidden', '');
+    }
+    // Sliders enabled only for linear
+    wxSlider.disabled = !linearModelActive;
+    wySlider.disabled = !linearModelActive;
+    bSlider.disabled = !linearModelActive;
+    // Clear selection and contextual slider when switching models
+    setSelectedEdgeLinear(null);
+    setSelectedEdgeGeneric(null);
+    updateSliderValueLabels();
+    redrawScene();
+    updateLinearEdgeColors();
+};
+const handleLinearModelChange = () => {
+    updateSliderValueLabels();
+    if (linearModelActive) {
+        redrawScene();
+    }
+    updateLinearEdgeColors();
+};
+canvas.addEventListener('click', handleCanvasClick);
+canvas.addEventListener('pointerdown', handlePointerDown);
+canvas.addEventListener('pointermove', handlePointerMove);
+canvas.addEventListener('pointerup', handlePointerUp);
+canvas.addEventListener('pointercancel', handlePointerCancel);
+linearModelButton.addEventListener('click', () => {
+    setActiveModel(linearModelActive ? 'none' : 'linear');
+    updateLinearEdgeColors();
+});
+wxSlider.addEventListener('input', handleLinearModelChange);
+wySlider.addEventListener('input', handleLinearModelChange);
+bSlider.addEventListener('input', handleLinearModelChange);
+nnModelButton.addEventListener('click', () => {
+    // toggle behavior: deselect if already active
+    if (nnModelActive) {
+        setActiveModel('none');
+    }
+    else {
+        ensureNNBoundary();
+        setActiveModel('nn');
+        redrawScene();
+        updateNNEdgeColors();
+    }
+});
+// Contextual slider changes propagate to hidden legacy sliders
+edgeSlider.addEventListener('input', () => {
+    const value = edgeSlider.value;
+    if (selectedEdgeLinear) {
+        if (selectedEdgeLinear === 'wx')
+            wxSlider.value = value;
+        else if (selectedEdgeLinear === 'wy')
+            wySlider.value = value;
+        else
+            bSlider.value = value;
+        updateSliderValueLabels();
+        handleLinearModelChange();
+    }
+    else if (selectedEdgeGeneric) {
+        nnWeights.set(selectedEdgeGeneric.key, Number(value));
+        edgeValue.textContent = Number(value).toFixed(3);
+        redrawScene();
+        updateNNEdgeColors();
+        applySignClass(edgeValue, Number(value));
+    }
+    else if (selectedNNBias) {
+        nnWeights.set(selectedNNBias.key, Number(value));
+        edgeValue.textContent = Number(value).toFixed(3);
+        redrawScene();
+        applySignClass(edgeValue, Number(value));
+    }
+});
+stepSizeSlider.addEventListener('input', updateStepSizeLabel);
+optimizeStepButton.addEventListener('click', handleOptimizationStep);
+optimizeButton.addEventListener('click', handleOptimize);
+resetButton.addEventListener('click', () => {
+    if (linearModelActive) {
+        wxSlider.value = '0';
+        wySlider.value = '1';
+        bSlider.value = '0';
+        // keep selection but update displayed value if slider open
+        if (selectedEdgeLinear)
+            setSelectedEdgeLinear(selectedEdgeLinear);
+        updateLinearEdgeColors();
+    }
+    else if (nnModelActive) {
+        // Reinitialize NN weights and biases, and clear any NN selections
+        randomizeNNWeights(0.2);
+        ensureNNBoundary();
+        setSelectedEdgeGeneric(null);
+        setSelectedBias(null);
+        updateNNEdgeColors();
+    }
+    updateSliderValueLabels();
+    updateStepSizeLabel();
+    redrawScene();
+});
+// Initialize layout.
+applySelectionState(controlButtons[0]);
+updateSliderValueLabels();
+updateStepSizeLabel();
+resizeCanvas();
+redrawScene();
+window.addEventListener('resize', () => {
+    resizeCanvas();
+    redrawScene();
+});
+// Start with no model selected; only points are shown
+setActiveModel('none');
+// Initialize NN weights with small random values once
+initNNWeights();
+ensureNNBoundary();
+updateNNEdgeColors();
+// Wire up SVG edge clicks
+['edge-wx', 'edge-wy'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el)
+        return;
+    el.addEventListener('click', () => {
+        const edge = id === 'edge-wx' ? 'wx' : id === 'edge-wy' ? 'wy' : 'b';
+        // Toggle off if clicking the already-selected edge
+        if (selectedEdgeLinear === edge) {
+            setSelectedEdgeLinear(null);
+        }
+        else {
+            setSelectedEdgeLinear(edge);
+        }
+    });
+});
+// Linear output node click adjusts bias (b)
+const linearOutNode = document.getElementById('linear-out-node');
+if (linearOutNode) {
+    linearOutNode.addEventListener('click', () => {
+        const edge = 'b';
+        if (selectedEdgeLinear === edge)
+            setSelectedEdgeLinear(null);
+        else
+            setSelectedEdgeLinear(edge);
+    });
+}
+// Wire up NN SVG edge clicks (toggle selection)
+if (nnSvg) {
+    nnSvg.querySelectorAll('line[data-edge]').forEach((el) => {
+        el.addEventListener('click', () => {
+            // selecting an edge clears any node bias selection
+            selectedNNBias = null;
+            const key = el.getAttribute('data-edge');
+            if (selectedEdgeGeneric && selectedEdgeGeneric.key === key) {
+                setSelectedEdgeGeneric(null);
+            }
+            else {
+                setSelectedEdgeGeneric(key, el);
+            }
+        });
+    });
+    // Wire up bias node clicks
+    nnSvg.querySelectorAll('circle[data-bias]').forEach((el) => {
+        el.addEventListener('click', () => {
+            // selecting a node bias clears any edge selection
+            selectedEdgeGeneric = null;
+            const key = el.getAttribute('data-bias');
+            if (selectedNNBias && selectedNNBias.key === key) {
+                setSelectedBias(null);
+            }
+            else {
+                setSelectedBias(key, el);
+            }
+        });
+    });
+}
+// Clear points modal behavior
+const openModal = () => {
+    modalBackdrop.removeAttribute('hidden');
+    confirmModal.removeAttribute('hidden');
+};
+const closeModal = () => {
+    modalBackdrop.setAttribute('hidden', '');
+    confirmModal.setAttribute('hidden', '');
+};
+clearPointsButton.addEventListener('click', openModal);
+cancelClearBtn.addEventListener('click', closeModal);
+modalBackdrop.addEventListener('click', closeModal);
+confirmClearBtn.addEventListener('click', () => {
+    drawings.length = 0;
+    closeModal();
+    redrawScene();
+});
+const buildSavePayload = () => {
+    const payload = {
+        version: 1,
+        points: drawings.map((d) => ({ symbol: d.symbol, x: d.x, y: d.y }))
+    };
+    if (linearModelActive) {
+        const { wx, wy, b } = getCurrentParameters();
+        payload.model = {
+            type: 'linear',
+            params: { wx, wy, b },
+            learningRate: getStepSize(),
+            animate: !!animateCheckbox.checked
+        };
+    }
+    else if (nnModelActive) {
+        const weights = {};
+        [...NN_EDGE_KEYS, ...NN_BIAS_KEYS].forEach((k) => {
+            weights[k] = nnWeights.get(k) ?? 0;
+        });
+        payload.model = {
+            type: 'nn',
+            weights,
+            learningRate: getStepSize(),
+            animate: !!animateCheckbox.checked
+        };
+    }
+    return payload;
+};
+const triggerDownload = (filename, data) => {
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+};
+saveCanvasButton.addEventListener('click', () => {
+    const payload = buildSavePayload();
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    triggerDownload(`canvas-${ts}.json`, JSON.stringify(payload, null, 2));
+});
+const applyLoadedPayload = (payload) => {
+    // Load points
+    drawings.length = 0;
+    payload.points.forEach((p) => drawings.push({ symbol: p.symbol, x: p.x, y: p.y }));
+    // Load model
+    if (!payload.model) {
+        setActiveModel('none');
+    }
+    else if (payload.model.type === 'linear') {
+        setActiveModel('linear');
+        wxSlider.value = String(payload.model.params.wx);
+        wySlider.value = String(payload.model.params.wy);
+        bSlider.value = String(payload.model.params.b);
+        stepSizeSlider.value = String(payload.model.learningRate);
+        animateCheckbox.checked = !!payload.model.animate;
+        updateSliderValueLabels();
+        updateStepSizeLabel();
+        updateLinearEdgeColors();
+    }
+    else if (payload.model.type === 'nn') {
+        setActiveModel('nn');
+        // Apply weights
+        const weights = payload.model.weights;
+        [...NN_EDGE_KEYS, ...NN_BIAS_KEYS].forEach((k) => {
+            nnWeights.set(k, weights[k] ?? 0);
+        });
+        stepSizeSlider.value = String(payload.model.learningRate);
+        animateCheckbox.checked = !!payload.model.animate;
+        updateStepSizeLabel();
+        updateNNEdgeColors();
+    }
+    redrawScene();
+};
+loadCanvasButton.addEventListener('click', () => {
+    loadFileInput.value = '';
+    loadFileInput.click();
+});
+loadFileInput.addEventListener('change', () => {
+    const file = loadFileInput.files?.[0];
+    if (!file)
+        return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            const data = JSON.parse(String(reader.result));
+            if (!data || data.version !== 1 || !Array.isArray(data.points)) {
+                throw new Error('Invalid file format');
+            }
+            applyLoadedPayload(data);
+        }
+        catch (err) {
+            // eslint-disable-next-line no-alert
+            alert('Failed to load canvas: ' + err.message);
+        }
+    };
+    reader.onerror = () => {
+        // eslint-disable-next-line no-alert
+        alert('Failed to read file');
+    };
+    reader.readAsText(file);
+});
+</script>
+  </body>
+</html>
