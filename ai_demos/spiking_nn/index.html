@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spiking Neuron Network Playground</title>
+  <style>
+    :root {
+      --bg: #f4f8ff;
+      --bg-accent: #dceeff;
+      --panel: #ffffff;
+      --ink: #1f2a44;
+      --muted: #5a6b85;
+      --line: #c8d7ef;
+      --brand: #0f7b6c;
+      --shadow: 0 18px 36px rgba(18, 39, 74, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Avenir Next", "Avenir", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 5% 0%, rgba(229, 107, 44, 0.17), transparent 40%),
+        radial-gradient(circle at 95% 100%, rgba(15, 123, 108, 0.18), transparent 45%),
+        linear-gradient(140deg, var(--bg), var(--bg-accent));
+      display: flex;
+      justify-content: flex-start;
+      padding: 28px 18px;
+    }
+
+    .app {
+      width: min(1460px, 100%);
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) minmax(620px, 1fr) minmax(300px, 360px);
+      gap: 18px;
+      animation: fade-up 480ms ease;
+    }
+
+    @keyframes fade-up {
+      from {
+        transform: translateY(12px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      padding: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      letter-spacing: 0.01em;
+    }
+
+    .subtitle {
+      margin: 8px 0 10px;
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.4;
+    }
+
+    .network-map {
+      margin: 0 0 16px;
+      color: #2f4362;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: #f6fbff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 10px;
+    }
+
+    .control-row {
+      margin: 0 0 12px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfdff;
+    }
+
+    .control-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .control-value {
+      color: var(--brand);
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--brand);
+    }
+
+    .actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 9px 14px;
+      font: inherit;
+      font-weight: 700;
+      color: #fff;
+      background: var(--brand);
+      cursor: pointer;
+      transition: transform 120ms ease, filter 120ms ease;
+    }
+
+    button:hover {
+      filter: brightness(1.06);
+      transform: translateY(-1px);
+    }
+
+    .visuals {
+      padding: 20px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .visuals-head {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .neuron-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(280px, 1fr));
+      gap: 12px;
+      justify-content: start;
+      justify-items: start;
+    }
+
+    .neuron-card {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px;
+      background: #fff;
+      display: grid;
+      gap: 8px;
+    }
+
+    .neuron-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      padding: 0 2px;
+    }
+
+    .neuron-title {
+      margin: 0;
+      font-size: 0.97rem;
+    }
+
+    .neuron-meta {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .plot-label {
+      margin: 0;
+      color: #3b4e6d;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+    }
+
+    canvas {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #e4edf9;
+      background: linear-gradient(180deg, #ffffff, #f8fbff);
+      display: block;
+    }
+
+    .graph-panel {
+      padding: 20px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .graph-title {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .graph-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .graph-wrap {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #f7fbff;
+      padding: 10px;
+    }
+
+    .network-graph {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .edge {
+      stroke: #6f85a5;
+      stroke-width: 2.2;
+      fill: none;
+      opacity: 0.9;
+    }
+
+    .node circle {
+      fill: #d7e6fb;
+      stroke: #6783ab;
+      stroke-width: 2;
+      transition: fill 110ms ease, stroke 110ms ease, filter 110ms ease;
+    }
+
+    .node text {
+      fill: #253b5a;
+      font-size: 12px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      pointer-events: none;
+      transition: fill 110ms ease;
+    }
+
+    .node.spiking circle {
+      fill: #ffb27d;
+      stroke: #c14c00;
+      filter: drop-shadow(0 0 7px rgba(244, 112, 34, 0.6));
+    }
+
+    .node.spiking text {
+      fill: #8f3200;
+    }
+
+    @media (max-width: 1320px) {
+      .app {
+        grid-template-columns: minmax(280px, 360px) 1fr;
+      }
+
+      .graph-panel {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .neuron-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="card controls">
+      <h1>Spiking Neuron Network</h1>
+      <p class="subtitle">
+        Feedforward network of 4 LIF neurons with live, scrolling traces.
+      </p>
+      <p class="network-map">Input -> Hidden A, Hidden B -> Output</p>
+      <div id="controls"></div>
+      <div class="actions">
+        <button type="button" id="resetDefaults">Reset defaults</button>
+      </div>
+    </section>
+
+    <section class="card visuals">
+      <p class="visuals-head">Each panel shows membrane potential and spike train for one neuron.</p>
+      <div id="neuronGrid" class="neuron-grid"></div>
+    </section>
+
+    <section class="card graph-panel">
+      <h2 class="graph-title">Network Digraph</h2>
+      <p class="graph-subtitle">Nodes blink orange whenever they emit a spike.</p>
+      <div class="graph-wrap">
+        <svg id="networkGraph" class="network-graph" viewBox="0 0 360 250" aria-label="Neuron network graph">
+          <defs>
+            <marker id="arrowHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#6f85a5"></path>
+            </marker>
+          </defs>
+
+          <line class="edge" x1="75" y1="125" x2="152" y2="76" marker-end="url(#arrowHead)"></line>
+          <line class="edge" x1="75" y1="125" x2="152" y2="174" marker-end="url(#arrowHead)"></line>
+          <line class="edge" x1="208" y1="76" x2="287" y2="125" marker-end="url(#arrowHead)"></line>
+          <line class="edge" x1="208" y1="174" x2="287" y2="125" marker-end="url(#arrowHead)"></line>
+
+          <g class="node" data-node="input" transform="translate(60 125)">
+            <circle r="32"></circle>
+            <text>Input</text>
+          </g>
+
+          <g class="node" data-node="hiddenA" transform="translate(180 70)">
+            <circle r="32"></circle>
+            <text>Hidden A</text>
+          </g>
+
+          <g class="node" data-node="hiddenB" transform="translate(180 180)">
+            <circle r="32"></circle>
+            <text>Hidden B</text>
+          </g>
+
+          <g class="node" data-node="output" transform="translate(300 125)">
+            <circle r="32"></circle>
+            <text>Output</text>
+          </g>
+        </svg>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
