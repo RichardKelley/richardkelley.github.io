@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Single Perceptron in the Plane</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-a: #f8f7f3;
+      --bg-b: #e9f0df;
+      --panel: #ffffff;
+      --ink: #1f2530;
+      --muted: #556070;
+      --line: #d8ddcd;
+      --class0: #66a8d6;
+      --class1: #e98654;
+      --true0: #4f88b6;
+      --true1: #d35b6a;
+      --accent: #2d8755;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Space Grotesk", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 20%, rgba(233, 240, 223, 0.85), transparent 35%),
+        radial-gradient(circle at 85% 80%, rgba(218, 232, 206, 0.8), transparent 36%),
+        linear-gradient(140deg, var(--bg-a), var(--bg-b));
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .page {
+      width: min(1100px, 100%);
+      display: grid;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .page-header h1 {
+      margin: 0;
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .layout {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .column {
+      display: grid;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    .plot-panel {
+      padding: 14px;
+    }
+
+    .plot-title {
+      margin: 0 0 10px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      display: block;
+      background: #fff;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .legend {
+      margin-top: 10px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: #f6f8f2;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .controls {
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .controls h2 {
+      margin: 2px 0 6px;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .group {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px;
+      background: #fcfdf9;
+    }
+
+    .group h3 {
+      margin: 0 0 8px;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    label {
+      display: grid;
+      grid-template-columns: 42px 1fr 56px;
+      align-items: center;
+      gap: 8px;
+      margin: 7px 0;
+      font-size: 0.9rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .mono {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.85rem;
+      color: var(--ink);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #bac5a0;
+      transform: translateY(-1px);
+    }
+
+    .formula {
+      margin: 0;
+      padding: 9px 10px;
+      border-radius: 10px;
+      background: #f5f8ec;
+      border: 1px solid #d9e2c2;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0 0;
+      font-size: 0.9rem;
+    }
+
+    .toggle-row input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+      margin: 0;
+    }
+
+    .digraph {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: linear-gradient(180deg, #fdfef9, #f4f8ea);
+    }
+
+    .digraph .node {
+      fill: #ffffff;
+      stroke: #9fa88f;
+      stroke-width: 1.6;
+    }
+
+    .digraph .out-node {
+      fill: #e9f2dc;
+      stroke: #8a9b72;
+      stroke-width: 1.8;
+    }
+
+    .digraph .edge {
+      stroke: #5f6858;
+      stroke-width: 2;
+      fill: none;
+      marker-end: url(#arrowTip);
+    }
+
+    .digraph .edge-bias {
+      stroke-dasharray: 5 4;
+    }
+
+    .dg-title {
+      font-size: 13px;
+      font-weight: 700;
+      fill: #1e2a22;
+    }
+
+    .dg-text {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      fill: #2a332f;
+    }
+
+    .dg-node-label {
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .dg-value-left {
+      text-anchor: end;
+      dominant-baseline: middle;
+    }
+
+    .dg-value-right {
+      text-anchor: start;
+      dominant-baseline: middle;
+    }
+
+    .dg-value-below {
+      text-anchor: middle;
+      dominant-baseline: hanging;
+    }
+
+    .dg-soft {
+      fill: #5c665c;
+      font-size: 11px;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <h1>Single Perceptron in the Plane</h1>
+    </header>
+
+    <main class="layout">
+    <section class="column">
+      <section class="panel plot-panel">
+        <canvas id="plot" width="720" height="520"></canvas>
+      </section>
+
+      <section class="panel controls">
+        <div class="group">
+          <h3>Input</h3>
+          <label>
+            <span>x1</span>
+            <input id="px" type="range" min="-10" max="10" step="0.1" value="2.0" />
+            <span id="pxv" class="mono"></span>
+          </label>
+          <label>
+            <span>x2</span>
+            <input id="py" type="range" min="-10" max="10" step="0.1" value="1.0" />
+            <span id="pyv" class="mono"></span>
+          </label>
+          <p class="formula" id="probeOut"></p>
+        </div>
+
+        <div class="group">
+          <h3>Number of Points</h3>
+          <label>
+            <span>N</span>
+            <input id="count" type="range" min="3" max="80" step="1" value="3" />
+            <span id="countv" class="mono"></span>
+          </label>
+          <div class="btn-row">
+            <button id="regen">Regenerate</button>
+            <button id="clear">Clear</button>
+          </div>
+          <label class="toggle-row">
+            <input id="showTrueLabels" type="checkbox" checked />
+            <span>Color points by true labels (0/1)</span>
+          </label>
+          <p class="hint">Click in the graph to set the probe point and add an input point.</p>
+        </div>
+      </section>
+    </section>
+
+    <section class="panel controls">
+      <h2>Controls</h2>
+
+      <div class="group">
+        <h3>Perceptron Parameters</h3>
+        <p class="formula">y = H(w1*x1 + w2*x2 - θ)</p>
+        <p class="formula">H(z) = 1 if z ≥ 0, and 0 otherwise.</p>
+        <label>
+          <span>w1</span>
+          <input id="w1" type="range" min="-5" max="5" step="0.1" value="1.4" />
+          <span id="w1v" class="mono"></span>
+        </label>
+        <label>
+          <span>w2</span>
+          <input id="w2" type="range" min="-5" max="5" step="0.1" value="1.0" />
+          <span id="w2v" class="mono"></span>
+        </label>
+        <label>
+          <span>θ</span>
+          <input id="theta" type="range" min="-8" max="8" step="0.1" value="1.2" />
+          <span id="thetav" class="mono"></span>
+        </label>
+        <p class="formula" id="formula"></p>
+      </div>
+
+      <div class="group">
+        <h3>Perceptron Graph</h3>
+        <svg class="digraph" viewBox="0 0 500 280" aria-label="Directed graph of a single perceptron">
+          <defs>
+            <marker id="arrowTip" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#5f6858"></path>
+            </marker>
+          </defs>
+
+          <path class="edge" d="M140 50 L245 96"></path>
+          <path class="edge" d="M140 150 L245 114"></path>
+          <path class="edge edge-bias" d="M140 235 L245 122"></path>
+          <path class="edge" d="M315 105 L400 105"></path>
+
+          <text id="dgW1" class="dg-text" x="184" y="66"></text>
+          <text id="dgW2" class="dg-text" x="168" y="124"></text>
+          <text class="dg-text dg-value-right" x="182" y="222">θ</text>
+
+          <circle class="node" cx="108" cy="50" r="32"></circle>
+          <circle class="node" cx="108" cy="150" r="32"></circle>
+          <circle class="node" cx="108" cy="235" r="26"></circle>
+          <circle class="node" cx="280" cy="105" r="35"></circle>
+          <circle id="dgOutNode" class="out-node" cx="430" cy="105" r="33"></circle>
+
+          <text class="dg-title dg-node-label" x="108" y="50">x1</text>
+          <text id="dgXVal" class="dg-text dg-value-left" x="68" y="50"></text>
+          <text class="dg-title dg-node-label" x="108" y="150">x2</text>
+          <text id="dgYVal" class="dg-text dg-value-left" x="68" y="150"></text>
+          <text class="dg-title dg-node-label" x="108" y="235">θ</text>
+          <text id="dgTheta" class="dg-text dg-value-right" x="195" y="222"></text>
+
+          <text class="dg-title dg-node-label" x="280" y="105">Σ</text>
+          <text id="dgSum" class="dg-text dg-value-below" x="280" y="142"></text>
+
+          <text class="dg-title dg-node-label" x="430" y="105">H</text>
+          <text id="dgOut" class="dg-text dg-value-right" x="466" y="105"></text>
+        </svg>
+      </div>
+
+      <div class="group">
+        <h3>Boundary Overlay</h3>
+        <label class="toggle-row">
+          <input id="showOverlay" type="checkbox" />
+          <span>Show boundary and class colors</span>
+        </label>
+        <p class="formula" id="accuracyText"></p>
+      </div>
+    </section>
+    </main>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("plot");
+    const ctx = canvas.getContext("2d");
+
+    const inputs = {
+      w1: document.getElementById("w1"),
+      w2: document.getElementById("w2"),
+      theta: document.getElementById("theta"),
+      px: document.getElementById("px"),
+      py: document.getElementById("py"),
+      count: document.getElementById("count"),
+      showTrueLabels: document.getElementById("showTrueLabels"),
+      showOverlay: document.getElementById("showOverlay")
+    };
+
+    const views = {
+      w1v: document.getElementById("w1v"),
+      w2v: document.getElementById("w2v"),
+      thetav: document.getElementById("thetav"),
+      pxv: document.getElementById("pxv"),
+      pyv: document.getElementById("pyv"),
+      countv: document.getElementById("countv"),
+      formula: document.getElementById("formula"),
+      probeOut: document.getElementById("probeOut"),
+      dgXVal: document.getElementById("dgXVal"),
+      dgYVal: document.getElementById("dgYVal"),
+      dgW1: document.getElementById("dgW1"),
+      dgW2: document.getElementById("dgW2"),
+      dgTheta: document.getElementById("dgTheta"),
+      dgSum: document.getElementById("dgSum"),
+      dgOut: document.getElementById("dgOut"),
+      dgOutNode: document.getElementById("dgOutNode"),
+      accuracyText: document.getElementById("accuracyText")
+    };
+
+    const state = {
+      points: [],
+      draggingPointIndex: null,
+      pointerId: null,
+      dragStartCx: null,
+      dragStartCy: null,
+      draggedSinceDown: false,
+      maxDragDistanceSq: 0,
+      clickToggleCandidateIndex: null,
+      hasProbe: false,
+      selectedPointIndex: null
+    };
+
+    const WORLD = {
+      minX: -10,
+      maxX: 10,
+      minY: -10,
+      maxY: 10
+    };
+    const CLICK_DRAG_THRESHOLD_SQ = 225;
+
+    function toCanvas(x, y) {
+      const cx = ((x - WORLD.minX) / (WORLD.maxX - WORLD.minX)) * canvas.width;
+      const cy = canvas.height - ((y - WORLD.minY) / (WORLD.maxY - WORLD.minY)) * canvas.height;
+      return { x: cx, y: cy };
+    }
+
+    function toWorld(cx, cy) {
+      const x = WORLD.minX + (cx / canvas.width) * (WORLD.maxX - WORLD.minX);
+      const y = WORLD.minY + ((canvas.height - cy) / canvas.height) * (WORLD.maxY - WORLD.minY);
+      return { x, y };
+    }
+
+    function classify(x1, x2, w1, w2, theta) {
+      return (w1 * x1 + w2 * x2 >= theta) ? 1 : 0;
+    }
+
+    function clamp(v, lo, hi) {
+      return Math.max(lo, Math.min(hi, v));
+    }
+
+    function eventToCanvas(e) {
+      const rect = canvas.getBoundingClientRect();
+      const cx = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const cy = (e.clientY - rect.top) * (canvas.height / rect.height);
+      return { cx, cy };
+    }
+
+    function updateProbe(x, y, selectedPointIndex = state.selectedPointIndex) {
+      const qx = Number(x.toFixed(1));
+      const qy = Number(y.toFixed(1));
+      inputs.px.value = qx.toFixed(1);
+      inputs.py.value = qy.toFixed(1);
+      state.hasProbe = true;
+      state.selectedPointIndex = selectedPointIndex;
+      if (selectedPointIndex !== null && state.points[selectedPointIndex]) {
+        const current = state.points[selectedPointIndex];
+        state.points[selectedPointIndex] = { ...current, x: qx, y: qy };
+      }
+    }
+
+    function findPointIndexNear(cx, cy, radiusPx) {
+      let bestIdx = -1;
+      let bestDistSq = radiusPx * radiusPx;
+      for (let i = 0; i < state.points.length; i++) {
+        const p = toCanvas(state.points[i].x, state.points[i].y);
+        const dx = p.x - cx;
+        const dy = p.y - cy;
+        const distSq = dx * dx + dy * dy;
+        if (distSq <= bestDistSq) {
+          bestDistSq = distSq;
+          bestIdx = i;
+        }
+      }
+      return bestIdx;
+    }
+
+    function randomTrueLabel() {
+      return Math.random() < 0.5 ? 0 : 1;
+    }
+
+    function randomPoints(n) {
+      state.points = [];
+      for (let i = 0; i < n; i++) {
+        state.points.push({
+          x: WORLD.minX + Math.random() * (WORLD.maxX - WORLD.minX),
+          y: WORLD.minY + Math.random() * (WORLD.maxY - WORLD.minY),
+          trueLabel: randomTrueLabel()
+        });
+      }
+      state.selectedPointIndex = null;
+      state.hasProbe = false;
+      state.clickToggleCandidateIndex = null;
+    }
+
+    function drawGrid(showOverlay) {
+      ctx.save();
+      if (showOverlay) {
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#eef1e8";
+        for (let x = -10; x <= 10; x += 1) {
+          const p0 = toCanvas(x, -10);
+          const p1 = toCanvas(x, 10);
+          ctx.beginPath();
+          ctx.moveTo(p0.x, p0.y);
+          ctx.lineTo(p1.x, p1.y);
+          ctx.stroke();
+        }
+        for (let y = -10; y <= 10; y += 1) {
+          const p0 = toCanvas(-10, y);
+          const p1 = toCanvas(10, y);
+          ctx.beginPath();
+          ctx.moveTo(p0.x, p0.y);
+          ctx.lineTo(p1.x, p1.y);
+          ctx.stroke();
+        }
+      }
+
+      ctx.strokeStyle = "#c9cfbe";
+      ctx.lineWidth = 1.6;
+      const x0 = toCanvas(0, -10);
+      const x1 = toCanvas(0, 10);
+      const y0 = toCanvas(-10, 0);
+      const y1 = toCanvas(10, 0);
+      ctx.beginPath();
+      ctx.moveTo(x0.x, x0.y);
+      ctx.lineTo(x1.x, x1.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(y0.x, y0.y);
+      ctx.lineTo(y1.x, y1.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawShading(w1, w2, theta) {
+      const step = 10;
+      for (let cy = 0; cy < canvas.height; cy += step) {
+        for (let cx = 0; cx < canvas.width; cx += step) {
+          const p = toWorld(cx + step * 0.5, cy + step * 0.5);
+          const c = classify(p.x, p.y, w1, w2, theta);
+          ctx.fillStyle = c ? "rgba(233, 134, 84, 0.16)" : "rgba(102, 168, 214, 0.16)";
+          ctx.fillRect(cx, cy, step, step);
+        }
+      }
+    }
+
+    function boundaryIntersections(w1, w2, theta) {
+      const lines = [];
+      if (Math.abs(w2) > 1e-6) {
+        lines.push({ x: WORLD.minX, y: (theta - w1 * WORLD.minX) / w2 });
+        lines.push({ x: WORLD.maxX, y: (theta - w1 * WORLD.maxX) / w2 });
+      }
+      if (Math.abs(w1) > 1e-6) {
+        lines.push({ x: (theta - w2 * WORLD.minY) / w1, y: WORLD.minY });
+        lines.push({ x: (theta - w2 * WORLD.maxY) / w1, y: WORLD.maxY });
+      }
+      return lines.filter((p) =>
+        p.x >= WORLD.minX - 1e-6 && p.x <= WORLD.maxX + 1e-6 &&
+        p.y >= WORLD.minY - 1e-6 && p.y <= WORLD.maxY + 1e-6
+      );
+    }
+
+    function drawBoundaryAndWeight(w1, w2, theta) {
+      const pts = boundaryIntersections(w1, w2, theta);
+      if (pts.length >= 2) {
+        const p0 = toCanvas(pts[0].x, pts[0].y);
+        const p1 = toCanvas(pts[1].x, pts[1].y);
+        ctx.save();
+        ctx.strokeStyle = "#1a1a1a";
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(p0.x, p0.y);
+        ctx.lineTo(p1.x, p1.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      const mag = Math.hypot(w1, w2);
+      if (mag > 1e-6) {
+        const scale = 3.2 / mag;
+        const end = toCanvas(w1 * scale, w2 * scale);
+        const start = toCanvas(0, 0);
+        ctx.save();
+        ctx.strokeStyle = "#2d8755";
+        ctx.fillStyle = "#2d8755";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
+        ctx.stroke();
+        const angle = Math.atan2(end.y - start.y, end.x - start.x);
+        const size = 10;
+        ctx.beginPath();
+        ctx.moveTo(end.x, end.y);
+        ctx.lineTo(end.x - size * Math.cos(angle - Math.PI / 6), end.y - size * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(end.x - size * Math.cos(angle + Math.PI / 6), end.y - size * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function drawPoints(w1, w2, theta, showOverlay, showTrueLabels) {
+      for (let i = 0; i < state.points.length; i++) {
+        const p = state.points[i];
+        const isSelected = i === state.selectedPointIndex;
+        const pc = toCanvas(p.x, p.y);
+        ctx.beginPath();
+        ctx.arc(pc.x, pc.y, isSelected ? 7.8 : 6.6, 0, Math.PI * 2);
+        if (showTrueLabels) {
+          ctx.fillStyle = p.trueLabel === 1 ? "#d35b6a" : "#4f88b6";
+        } else if (showOverlay) {
+          const c = classify(p.x, p.y, w1, w2, theta);
+          ctx.fillStyle = c ? "#e98654" : "#66a8d6";
+        } else {
+          ctx.fillStyle = "#355f84";
+        }
+        ctx.fill();
+        ctx.strokeStyle = isSelected ? "#111" : "#fff";
+        ctx.lineWidth = isSelected ? 2.2 : 1.2;
+        ctx.stroke();
+      }
+    }
+
+    function drawProbe(w1, w2, theta, px, py, showOverlay, showTrueLabels) {
+      if (!state.hasProbe || !showOverlay) return;
+      const c = classify(px, py, w1, w2, theta);
+      const p = toCanvas(px, py);
+      let probeFill = c ? "#e98654" : "#66a8d6";
+      if (showTrueLabels && state.selectedPointIndex !== null && state.points[state.selectedPointIndex]) {
+        probeFill = state.points[state.selectedPointIndex].trueLabel === 1 ? "#d35b6a" : "#4f88b6";
+      }
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+      ctx.fillStyle = probeFill;
+      ctx.fill();
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(p.x - 10, p.y);
+      ctx.lineTo(p.x + 10, p.y);
+      ctx.moveTo(p.x, p.y - 10);
+      ctx.lineTo(p.x, p.y + 10);
+      ctx.strokeStyle = "rgba(0,0,0,0.45)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function refreshText() {
+      const w1 = Number(inputs.w1.value);
+      const w2 = Number(inputs.w2.value);
+      const theta = Number(inputs.theta.value);
+      const px = Number(inputs.px.value);
+      const py = Number(inputs.py.value);
+      const showOverlay = inputs.showOverlay.checked;
+      const sum = w1 * px + w2 * py;
+      const y = sum >= theta ? 1 : 0;
+
+      views.w1v.textContent = w1.toFixed(1);
+      views.w2v.textContent = w2.toFixed(1);
+      views.thetav.textContent = theta.toFixed(1);
+      views.pxv.textContent = px.toFixed(1);
+      views.pyv.textContent = py.toFixed(1);
+      views.countv.textContent = inputs.count.value;
+      views.formula.textContent = state.hasProbe
+        ? `y = H(${w1.toFixed(1)}*${px.toFixed(1)} + ${w2.toFixed(1)}*${py.toFixed(1)} - ${theta.toFixed(1)})`
+        : `y = H(${w1.toFixed(1)}*x1 + ${w2.toFixed(1)}*x2 - ${theta.toFixed(1)})`;
+      views.probeOut.textContent = state.hasProbe
+        ? `For x = (${px.toFixed(1)}, ${py.toFixed(1)}):  z = ${sum.toFixed(2)}  =>  y = ${y}`
+        : "No probe selected yet. Click/drag a point or move x1, x2 sliders.";
+      views.dgXVal.textContent = state.hasProbe ? `${px.toFixed(2)}` : "--";
+      views.dgYVal.textContent = state.hasProbe ? `${py.toFixed(2)}` : "--";
+      views.dgW1.textContent = `w1 ${w1.toFixed(2)}`;
+      views.dgW2.textContent = `w2 ${w2.toFixed(2)}`;
+      views.dgTheta.textContent = `${theta.toFixed(2)}`;
+      views.dgSum.textContent = state.hasProbe ? `${sum.toFixed(2)}` : "--";
+      views.dgOut.textContent = state.hasProbe ? `${y}` : "--";
+      views.dgOutNode.style.fill = state.hasProbe ? (y ? "#f5cfbc" : "#c7def0") : "#e9f2dc";
+
+      if (showOverlay) {
+        const total = state.points.length;
+        if (total === 0) {
+          views.accuracyText.textContent = "Accuracy: -- (no points)";
+        } else {
+          let correct = 0;
+          for (const p of state.points) {
+            const predicted = classify(p.x, p.y, w1, w2, theta);
+            if (predicted === p.trueLabel) correct += 1;
+          }
+          const pct = (100 * correct / total).toFixed(1);
+          views.accuracyText.textContent = `Accuracy: ${pct}% (${correct}/${total})`;
+        }
+        views.accuracyText.style.display = "block";
+      } else {
+        views.accuracyText.style.display = "none";
+      }
+    }
+
+    function render() {
+      const w1 = Number(inputs.w1.value);
+      const w2 = Number(inputs.w2.value);
+      const theta = Number(inputs.theta.value);
+      const px = Number(inputs.px.value);
+      const py = Number(inputs.py.value);
+      const showOverlay = inputs.showOverlay.checked;
+      const showTrueLabels = inputs.showTrueLabels.checked;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (showOverlay) {
+        drawShading(w1, w2, theta);
+      }
+      drawGrid(showOverlay);
+      if (showOverlay) {
+        drawBoundaryAndWeight(w1, w2, theta);
+      }
+      drawPoints(w1, w2, theta, showOverlay, showTrueLabels);
+      drawProbe(w1, w2, theta, px, py, showOverlay, showTrueLabels);
+      refreshText();
+    }
+
+    for (const [key, input] of Object.entries(inputs)) {
+      if (key === "px" || key === "py") continue;
+      input.addEventListener("input", render);
+    }
+
+    function syncSelectedPointFromProbeSliders() {
+      const x = clamp(Number(inputs.px.value), WORLD.minX, WORLD.maxX);
+      const y = clamp(Number(inputs.py.value), WORLD.minY, WORLD.maxY);
+      state.hasProbe = true;
+      if (state.selectedPointIndex !== null && state.points[state.selectedPointIndex]) {
+        const current = state.points[state.selectedPointIndex];
+        state.points[state.selectedPointIndex] = { ...current, x, y };
+      }
+      render();
+    }
+
+    inputs.px.addEventListener("input", syncSelectedPointFromProbeSliders);
+    inputs.py.addEventListener("input", syncSelectedPointFromProbeSliders);
+
+    document.getElementById("regen").addEventListener("click", () => {
+      randomPoints(Number(inputs.count.value));
+      if (state.points.length > 0) {
+        updateProbe(state.points[0].x, state.points[0].y, 0);
+      }
+      render();
+    });
+
+    document.getElementById("clear").addEventListener("click", () => {
+      state.points = [];
+      state.hasProbe = false;
+      state.selectedPointIndex = null;
+      state.clickToggleCandidateIndex = null;
+      render();
+    });
+
+    function stopDragging(e) {
+      if (state.draggingPointIndex === null) return;
+      const shouldRepaint = e.type === "pointerup";
+      if (state.pointerId !== null && canvas.hasPointerCapture(state.pointerId)) {
+        canvas.releasePointerCapture(state.pointerId);
+      }
+      state.draggingPointIndex = null;
+      state.pointerId = null;
+      state.dragStartCx = null;
+      state.dragStartCy = null;
+      state.draggedSinceDown = false;
+      state.maxDragDistanceSq = 0;
+      if (e.type === "pointercancel") {
+        state.clickToggleCandidateIndex = null;
+      }
+      canvas.style.cursor = "crosshair";
+      if (shouldRepaint) {
+        render();
+      }
+    }
+
+    canvas.addEventListener("pointerdown", (e) => {
+      const { cx, cy } = eventToCanvas(e);
+      const idx = findPointIndexNear(cx, cy, 12);
+
+      if (idx >= 0) {
+        state.draggingPointIndex = idx;
+        state.pointerId = e.pointerId;
+        state.dragStartCx = cx;
+        state.dragStartCy = cy;
+        state.draggedSinceDown = false;
+        state.maxDragDistanceSq = 0;
+        state.clickToggleCandidateIndex = idx;
+        canvas.setPointerCapture(e.pointerId);
+        const p = state.points[idx];
+        updateProbe(p.x, p.y, idx);
+        canvas.style.cursor = "grabbing";
+        render();
+        return;
+      }
+
+      const p = toWorld(cx, cy);
+      state.clickToggleCandidateIndex = null;
+      state.points.push({ x: p.x, y: p.y, trueLabel: randomTrueLabel() });
+      updateProbe(p.x, p.y, state.points.length - 1);
+      render();
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+      if (state.draggingPointIndex === null) return;
+      if (state.pointerId !== null && e.pointerId !== state.pointerId) return;
+
+      const { cx, cy } = eventToCanvas(e);
+      const dx = cx - state.dragStartCx;
+      const dy = cy - state.dragStartCy;
+      const travelSq = dx * dx + dy * dy;
+      if (travelSq > state.maxDragDistanceSq) {
+        state.maxDragDistanceSq = travelSq;
+      }
+      if (!state.draggedSinceDown) {
+        if (state.maxDragDistanceSq < CLICK_DRAG_THRESHOLD_SQ) return;
+        state.draggedSinceDown = true;
+        state.clickToggleCandidateIndex = null;
+      }
+      const p = toWorld(cx, cy);
+      const x = clamp(p.x, WORLD.minX, WORLD.maxX);
+      const y = clamp(p.y, WORLD.minY, WORLD.maxY);
+      const current = state.points[state.draggingPointIndex];
+      state.points[state.draggingPointIndex] = { ...current, x, y };
+      updateProbe(x, y, state.draggingPointIndex);
+      render();
+    });
+
+    canvas.addEventListener("pointerup", stopDragging);
+    canvas.addEventListener("pointercancel", stopDragging);
+    canvas.addEventListener("click", () => {
+      const idx = state.clickToggleCandidateIndex;
+      state.clickToggleCandidateIndex = null;
+      if (idx === null || !state.points[idx]) return;
+      const current = state.points[idx];
+      state.points[idx] = {
+        ...current,
+        trueLabel: current.trueLabel === 1 ? 0 : 1
+      };
+      render();
+    });
+
+    randomPoints(Number(inputs.count.value));
+    if (state.points.length > 0) {
+      updateProbe(state.points[0].x, state.points[0].y, 0);
+    }
+    render();
+  </script>
+</body>
+</html>
