@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interactive Graph, Adjacency Matrix, and Laplacian</title>
+  <style>
+    :root {
+      --bg: #f4f2ec;
+      --panel: #fffdf8;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --accent: #0f766e;
+      --accent-soft: #ccfbf1;
+      --edge: #374151;
+      --danger: #b91c1c;
+      --border: #d1d5db;
+      --layout-gap: clamp(6px, 1.2vw, 12px);
+      --column-gap: clamp(4px, 0.9vw, 10px);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, #e0f2fe 0%, transparent 40%),
+        radial-gradient(circle at 90% 10%, #fde68a 0%, transparent 35%),
+        var(--bg);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.4rem, 2.5vw, 2rem);
+      letter-spacing: 0.02em;
+    }
+
+    p {
+      margin: 6px 0;
+      color: var(--muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 1.4fr) minmax(280px, 1fr);
+      gap: var(--layout-gap);
+      align-items: stretch;
+    }
+
+    .layout > .panel {
+      height: 100%;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--ink);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover {
+      border-color: #9ca3af;
+    }
+
+    button.mode-active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: #134e4a;
+    }
+
+    button.mode-sticky {
+      border-width: 3px;
+      border-color: #0f766e;
+    }
+
+    button.danger {
+      color: var(--danger);
+    }
+
+    .canvas-wrap {
+      border: 1px dashed #94a3b8;
+      border-radius: 12px;
+      background: white;
+      overflow: hidden;
+      position: relative;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 900 / 430;
+      display: block;
+      touch-action: none;
+    }
+
+    .node {
+      fill: #f8fafc;
+      stroke: #334155;
+      stroke-width: 2px;
+      cursor: grab;
+    }
+
+    .node.selected {
+      fill: #bbf7d0;
+      stroke: #166534;
+      stroke-width: 3px;
+    }
+
+    .edge {
+      stroke: var(--edge);
+      stroke-width: 3px;
+      cursor: pointer;
+      stroke-linecap: round;
+    }
+
+    .edge.selected {
+      stroke: #0f766e;
+      stroke-width: 5px;
+    }
+
+    .edge-hit {
+      stroke: rgba(0, 0, 0, 0.001);
+      stroke-width: 14px;
+      stroke-linecap: round;
+      pointer-events: stroke;
+      cursor: pointer;
+    }
+
+    .node-label {
+      font-size: 13px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      pointer-events: none;
+      font-weight: 700;
+      fill: #111827;
+    }
+
+    .tables {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(210px, 0.7fr);
+      gap: var(--column-gap);
+    }
+
+    .tables > div {
+      display: grid;
+      gap: 3px;
+    }
+
+    .matrix-col {
+      gap: 6px;
+    }
+
+    .spectrum-col {
+      align-content: start;
+    }
+
+    .tables h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-width: 100%;
+      padding: 1px;
+    }
+
+    .matrix {
+      position: relative;
+      display: inline-grid;
+      gap: 2px;
+      padding: 3px 12px;
+      font-size: 0.86rem;
+      font-variant-numeric: tabular-nums;
+      background: #ffffff;
+    }
+
+    .matrix::before,
+    .matrix::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 8px;
+      border-top: 1px solid #334155;
+      border-bottom: 1px solid #334155;
+    }
+
+    .matrix::before {
+      left: 0;
+      border-left: 1px solid #334155;
+    }
+
+    .matrix::after {
+      right: 0;
+      border-right: 1px solid #334155;
+    }
+
+    .matrix-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .matrix-cell {
+      display: inline-block;
+      min-width: 1.5em;
+      text-align: center;
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 6px 0;
+    }
+
+    .spectrum {
+      margin: 0;
+      padding: 0;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .zero-multiplicity {
+      margin: 0;
+      font-size: 0.86rem;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .zero-block {
+      display: grid;
+      gap: 3px;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 980px) {
+      .tables {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Laplacian Spectrum Visualizer</h1>
+  <p>Edit nodes and edges, then watch the adjacency matrix, Laplacian, and spectrum update instantly.</p>
+
+  <div class="layout">
+    <section class="panel">
+      <div class="controls">
+        <button id="addNodeBtn">Add Node</button>
+        <button id="toggleEdgeModeBtn">Toggle Edge</button>
+        <button id="clearBtn" class="danger">Clear Graph</button>
+      </div>
+
+      <div class="canvas-wrap">
+        <svg id="graphSvg" viewBox="0 0 900 430" aria-label="Graph canvas"></svg>
+      </div>
+
+      <div class="hint">
+        Click <strong>Add Node</strong>, then click the canvas to place one node.<br />
+        Double-click <strong>Add Node</strong> to keep add-node mode on; click it again to turn it off.<br />
+        By default, click a node to select and drag to move, or click an edge to select it. Press <strong>Delete</strong> or <strong>X</strong> to delete the selected node/edge.<br />
+        In <strong>Toggle Edge</strong> mode: click two nodes to add/remove the undirected edge between them.
+      </div>
+    </section>
+
+    <section class="panel tables">
+      <div class="matrix-col">
+        <div>
+          <h3>Adjacency Matrix A</h3>
+          <div id="adjacencyContainer" class="table-wrap"></div>
+        </div>
+        <div>
+          <h3>Laplacian L = D - A</h3>
+          <div id="laplacianContainer" class="table-wrap"></div>
+        </div>
+      </div>
+      <div class="spectrum-col">
+        <h3>Laplacian Spectrum (Eigenvalues)</h3>
+        <div id="spectrumContainer"></div>
+        <div class="zero-block">
+          <h3>Multiplicity of 0</h3>
+          <div id="zeroMultiplicityContainer" class="zero-multiplicity"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const svg = document.getElementById("graphSvg");
+    const addNodeBtn = document.getElementById("addNodeBtn");
+    const toggleEdgeModeBtn = document.getElementById("toggleEdgeModeBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    const adjacencyContainer = document.getElementById("adjacencyContainer");
+    const laplacianContainer = document.getElementById("laplacianContainer");
+    const zeroMultiplicityContainer = document.getElementById("zeroMultiplicityContainer");
+    const spectrumContainer = document.getElementById("spectrumContainer");
+
+    const NODE_RADIUS = 18;
+    const PADDING = 22;
+
+    let nodes = [];
+    let edges = [];
+    let nextId = 1;
+
+    let mode = "select"; // "select", "toggle-edge", or "add-node"
+    let addNodeSticky = false;
+    let selectedNodeId = null;
+    let selectedEdgeKey = null;
+    let edgeStartNodeId = null;
+
+    let dragNodeId = null;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    function rand(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    function graphWidth() {
+      return 900;
+    }
+
+    function graphHeight() {
+      return 430;
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function edgeKey(a, b) {
+      const i = Math.min(a, b);
+      const j = Math.max(a, b);
+      return `${i}-${j}`;
+    }
+
+    function hasEdge(a, b) {
+      const key = edgeKey(a, b);
+      return edges.some((e) => edgeKey(e.a, e.b) === key);
+    }
+
+    function addNode(x, y) {
+      const rawX = x ?? rand(PADDING + NODE_RADIUS, graphWidth() - PADDING - NODE_RADIUS);
+      const rawY = y ?? rand(PADDING + NODE_RADIUS, graphHeight() - PADDING - NODE_RADIUS);
+      const nx = x === undefined || x === null
+        ? clamp(rawX, PADDING + NODE_RADIUS, graphWidth() - PADDING - NODE_RADIUS)
+        : clamp(rawX, 0, graphWidth());
+      const ny = y === undefined || y === null
+        ? clamp(rawY, PADDING + NODE_RADIUS, graphHeight() - PADDING - NODE_RADIUS)
+        : clamp(rawY, 0, graphHeight());
+      nodes.push({ id: nextId++, x: nx, y: ny });
+      renderAll();
+    }
+
+    function deleteNode(id) {
+      nodes = nodes.filter((n) => n.id !== id);
+      edges = edges.filter((e) => e.a !== id && e.b !== id);
+      if (selectedNodeId === id) selectedNodeId = null;
+      if (selectedEdgeKey !== null && !edges.some((e) => edgeKey(e.a, e.b) === selectedEdgeKey)) {
+        selectedEdgeKey = null;
+      }
+      if (edgeStartNodeId === id) edgeStartNodeId = null;
+      renderAll();
+    }
+
+    function deleteEdgeByKey(key) {
+      edges = edges.filter((e) => edgeKey(e.a, e.b) !== key);
+      if (selectedEdgeKey === key) selectedEdgeKey = null;
+      renderAll();
+    }
+
+    function toggleEdge(a, b) {
+      if (a === b) return;
+      const key = edgeKey(a, b);
+      const idx = edges.findIndex((e) => edgeKey(e.a, e.b) === key);
+      if (idx >= 0) {
+        edges.splice(idx, 1);
+        if (selectedEdgeKey === key) selectedEdgeKey = null;
+      } else {
+        edges.push({ a: Math.min(a, b), b: Math.max(a, b) });
+      }
+      renderAll();
+    }
+
+    function adjacencyMatrix() {
+      const n = nodes.length;
+      const indexById = new Map(nodes.map((node, idx) => [node.id, idx]));
+      const A = Array.from({ length: n }, () => Array(n).fill(0));
+      edges.forEach((e) => {
+        const i = indexById.get(e.a);
+        const j = indexById.get(e.b);
+        if (i !== undefined && j !== undefined) {
+          A[i][j] = 1;
+          A[j][i] = 1;
+        }
+      });
+      return A;
+    }
+
+    function laplacianMatrix(A) {
+      const n = A.length;
+      const L = Array.from({ length: n }, () => Array(n).fill(0));
+      for (let i = 0; i < n; i++) {
+        let degree = 0;
+        for (let j = 0; j < n; j++) {
+          degree += A[i][j];
+        }
+        for (let j = 0; j < n; j++) {
+          if (i === j) {
+            L[i][j] = degree;
+          } else {
+            L[i][j] = -A[i][j];
+          }
+        }
+      }
+      return L;
+    }
+
+    function matrixHtml(M) {
+      if (M.length === 0) {
+        return '<div class="empty">No nodes yet.</div>';
+      }
+
+      let html = '<div class="matrix">';
+      for (let i = 0; i < M.length; i++) {
+        html += '<div class="matrix-row">';
+        for (let j = 0; j < M.length; j++) {
+          html += `<span class="matrix-cell">${M[i][j]}</span>`;
+        }
+        html += "</div>";
+      }
+      html += "</div>";
+      return html;
+    }
+
+    function laplacianSpectrum(L) {
+      const n = L.length;
+      if (n === 0) return [];
+      if (n === 1) return [Number(L[0][0])];
+
+      // Jacobi eigenvalue iterations for real symmetric matrices.
+      const M = L.map((row) => row.map((x) => Number(x)));
+      const maxIterations = 80 * n * n;
+      const eps = 1e-10;
+
+      for (let iter = 0; iter < maxIterations; iter++) {
+        let p = 0;
+        let q = 1;
+        let maxOffDiag = 0;
+
+        for (let i = 0; i < n; i++) {
+          for (let j = i + 1; j < n; j++) {
+            const val = Math.abs(M[i][j]);
+            if (val > maxOffDiag) {
+              maxOffDiag = val;
+              p = i;
+              q = j;
+            }
+          }
+        }
+
+        if (maxOffDiag < eps) break;
+
+        const app = M[p][p];
+        const aqq = M[q][q];
+        const apq = M[p][q];
+
+        const theta = 0.5 * Math.atan2(2 * apq, aqq - app);
+        const c = Math.cos(theta);
+        const s = Math.sin(theta);
+
+        for (let k = 0; k < n; k++) {
+          if (k !== p && k !== q) {
+            const mkp = M[k][p];
+            const mkq = M[k][q];
+            M[k][p] = c * mkp - s * mkq;
+            M[p][k] = M[k][p];
+            M[k][q] = s * mkp + c * mkq;
+            M[q][k] = M[k][q];
+          }
+        }
+
+        M[p][p] = c * c * app - 2 * s * c * apq + s * s * aqq;
+        M[q][q] = s * s * app + 2 * s * c * apq + c * c * aqq;
+        M[p][q] = 0;
+        M[q][p] = 0;
+      }
+
+      return M
+        .map((row, i) => row[i])
+        .map((x) => (Math.abs(x) < 1e-9 ? 0 : x))
+        .sort((a, b) => a - b);
+    }
+
+    function spectrumHtml(eigenvalues) {
+      if (eigenvalues.length === 0) {
+        return '<div class="empty">No nodes yet.</div>';
+      }
+      const zeroTol = 1e-7;
+      const values = eigenvalues.map((x) => {
+        const isZero = Math.abs(x) <= zeroTol;
+        const display = (isZero ? 0 : x).toFixed(6);
+        return isZero ? `<strong>${display}</strong>` : display;
+      });
+      return `<div class="spectrum">${values.join("<br />")}</div>`;
+    }
+
+    function zeroMultiplicity(eigenvalues, tol = 1e-7) {
+      return eigenvalues.filter((x) => Math.abs(x) <= tol).length;
+    }
+
+    function updateMatricesAndStats() {
+      const A = adjacencyMatrix();
+      const L = laplacianMatrix(A);
+      const eigs = laplacianSpectrum(L);
+      const m0 = zeroMultiplicity(eigs);
+
+      adjacencyContainer.innerHTML = matrixHtml(A);
+      laplacianContainer.innerHTML = matrixHtml(L);
+      zeroMultiplicityContainer.textContent = `mult(0) = ${m0}`;
+      spectrumContainer.innerHTML = spectrumHtml(eigs);
+    }
+
+    function renderGraph() {
+      while (svg.firstChild) {
+        svg.removeChild(svg.firstChild);
+      }
+
+      for (const e of edges) {
+        const a = nodes.find((n) => n.id === e.a);
+        const b = nodes.find((n) => n.id === e.b);
+        if (!a || !b) continue;
+        const key = edgeKey(e.a, e.b);
+
+        const edgeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+
+        const hitLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        hitLine.setAttribute("x1", a.x);
+        hitLine.setAttribute("y1", a.y);
+        hitLine.setAttribute("x2", b.x);
+        hitLine.setAttribute("y2", b.y);
+        hitLine.setAttribute("class", "edge-hit");
+
+        const visibleLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        visibleLine.setAttribute("x1", a.x);
+        visibleLine.setAttribute("y1", a.y);
+        visibleLine.setAttribute("x2", b.x);
+        visibleLine.setAttribute("y2", b.y);
+        visibleLine.setAttribute("class", `edge${selectedEdgeKey === key ? " selected" : ""}`);
+
+        edgeGroup.appendChild(hitLine);
+        edgeGroup.appendChild(visibleLine);
+
+        edgeGroup.addEventListener("click", (event) => {
+          if (mode === "add-node") return;
+          event.stopPropagation();
+          onEdgeClick(key);
+        });
+        svg.appendChild(edgeGroup);
+      }
+
+      for (const node of nodes) {
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.setAttribute("data-node-id", node.id);
+
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", node.x);
+        circle.setAttribute("cy", node.y);
+        circle.setAttribute("r", NODE_RADIUS);
+        circle.setAttribute("class", `node${selectedNodeId === node.id ? " selected" : ""}`);
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", node.x);
+        text.setAttribute("y", node.y);
+        text.setAttribute("class", "node-label");
+        text.textContent = `v${node.id}`;
+
+        g.appendChild(circle);
+        g.appendChild(text);
+
+        g.addEventListener("pointerdown", (event) => {
+          event.stopPropagation();
+          onNodePointerDown(event, node.id);
+        });
+
+        g.addEventListener("click", (event) => {
+          if (mode === "add-node") return;
+          event.stopPropagation();
+          onNodeClick(node.id);
+        });
+
+        svg.appendChild(g);
+      }
+    }
+
+    function renderAll() {
+      renderGraph();
+      updateMatricesAndStats();
+    }
+
+    function setMode(nextMode) {
+      mode = nextMode;
+      if (mode !== "toggle-edge") {
+        edgeStartNodeId = null;
+      }
+      if (mode !== "add-node") {
+        addNodeSticky = false;
+      }
+      if (mode !== "select") {
+        selectedNodeId = null;
+      }
+      refreshModeButtons();
+      renderAll();
+    }
+
+    function refreshModeButtons() {
+      addNodeBtn.classList.toggle("mode-active", mode === "add-node");
+      addNodeBtn.classList.toggle("mode-sticky", mode === "add-node" && addNodeSticky);
+      toggleEdgeModeBtn.classList.toggle("mode-active", mode === "toggle-edge");
+    }
+
+    function onNodeClick(nodeId) {
+      if (mode === "add-node") {
+        return;
+      }
+      if (mode === "toggle-edge") {
+        if (edgeStartNodeId === null) {
+          edgeStartNodeId = nodeId;
+          selectedNodeId = nodeId;
+          selectedEdgeKey = null;
+          renderAll();
+          return;
+        }
+        const start = edgeStartNodeId;
+        edgeStartNodeId = null;
+        selectedNodeId = null;
+        if (start !== nodeId) {
+          toggleEdge(start, nodeId);
+        } else {
+          renderAll();
+        }
+      } else {
+        selectedNodeId = nodeId;
+        selectedEdgeKey = null;
+        renderAll();
+      }
+    }
+
+    function onEdgeClick(key) {
+      selectedNodeId = null;
+      edgeStartNodeId = null;
+      selectedEdgeKey = key;
+      renderAll();
+    }
+
+    function findNodeById(id) {
+      return nodes.find((n) => n.id === id);
+    }
+
+    function svgPoint(event) {
+      const ctm = svg.getScreenCTM();
+      if (!ctm) {
+        const rect = svg.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * graphWidth();
+        const y = ((event.clientY - rect.top) / rect.height) * graphHeight();
+        return { x, y };
+      }
+
+      const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(ctm.inverse());
+      return {
+        x: clamp(point.x, 0, graphWidth()),
+        y: clamp(point.y, 0, graphHeight())
+      };
+    }
+
+    function onNodePointerDown(event, nodeId) {
+      if (mode !== "select") return;
+      const node = findNodeById(nodeId);
+      if (!node) return;
+
+      const pt = svgPoint(event);
+      dragNodeId = nodeId;
+      dragOffsetX = pt.x - node.x;
+      dragOffsetY = pt.y - node.y;
+
+      const target = event.currentTarget;
+      if (target && typeof target.setPointerCapture === "function") {
+        target.setPointerCapture(event.pointerId);
+      }
+    }
+
+    svg.addEventListener("pointermove", (event) => {
+      if (dragNodeId === null) return;
+      const node = findNodeById(dragNodeId);
+      if (!node) return;
+
+      const pt = svgPoint(event);
+      node.x = clamp(pt.x - dragOffsetX, PADDING + NODE_RADIUS, graphWidth() - PADDING - NODE_RADIUS);
+      node.y = clamp(pt.y - dragOffsetY, PADDING + NODE_RADIUS, graphHeight() - PADDING - NODE_RADIUS);
+      renderAll();
+    });
+
+    function stopDragging() {
+      dragNodeId = null;
+    }
+
+    svg.addEventListener("pointerup", stopDragging);
+    svg.addEventListener("pointerleave", stopDragging);
+
+    svg.addEventListener("click", (event) => {
+      if (mode === "add-node") {
+        const pt = svgPoint(event);
+        addNode(pt.x, pt.y);
+        if (!addNodeSticky) {
+          setMode("select");
+        }
+        return;
+      }
+      if (mode === "select") {
+        selectedNodeId = null;
+        selectedEdgeKey = null;
+        renderAll();
+      }
+      if (mode === "toggle-edge") {
+        edgeStartNodeId = null;
+        selectedNodeId = null;
+        selectedEdgeKey = null;
+        renderAll();
+      }
+    });
+
+    addNodeBtn.addEventListener("click", () => {
+      if (mode === "add-node" && addNodeSticky) {
+        setMode("select");
+        return;
+      }
+      setMode("add-node");
+      addNodeSticky = false;
+      refreshModeButtons();
+    });
+
+    addNodeBtn.addEventListener("dblclick", (event) => {
+      event.preventDefault();
+      if (mode === "add-node" && addNodeSticky) {
+        setMode("select");
+        return;
+      }
+      setMode("add-node");
+      addNodeSticky = true;
+      refreshModeButtons();
+    });
+
+    toggleEdgeModeBtn.addEventListener("click", () => {
+      if (mode === "toggle-edge") {
+        setMode("select");
+      } else {
+        setMode("toggle-edge");
+      }
+    });
+
+    clearBtn.addEventListener("click", () => {
+      nodes = [];
+      edges = [];
+      selectedNodeId = null;
+      selectedEdgeKey = null;
+      edgeStartNodeId = null;
+      nextId = 1;
+      renderAll();
+    });
+
+    window.addEventListener("keydown", (event) => {
+      const isDelete =
+        event.key === "Delete" ||
+        event.key === "Backspace" ||
+        event.code === "Delete" ||
+        event.code === "Backspace";
+      const isX = event.key.toLowerCase() === "x";
+      if (!isDelete && !isX) return;
+
+      if (selectedNodeId !== null) {
+        deleteNode(selectedNodeId);
+        event.preventDefault();
+        return;
+      }
+      if (selectedEdgeKey !== null) {
+        deleteEdgeByKey(selectedEdgeKey);
+        event.preventDefault();
+      }
+    });
+
+    // Seed with a small graph.
+    addNode(220, 140);
+    addNode(500, 120);
+    addNode(350, 310);
+    addNode(670, 280);
+    toggleEdge(nodes[0].id, nodes[1].id);
+    toggleEdge(nodes[1].id, nodes[2].id);
+    toggleEdge(nodes[2].id, nodes[0].id);
+    toggleEdge(nodes[1].id, nodes[3].id);
+    setMode("select");
+  </script>
+</body>
+</html>
