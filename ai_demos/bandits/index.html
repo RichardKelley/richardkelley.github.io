@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple 3-Arm Bandit Demo</title>
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --card: #fff;
+      --ink: #1f2933;
+      --muted: #52606d;
+      --accent: #0f766e;
+      --accent-soft: #dff3ef;
+      --border: #d7dee5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Avenir Next", sans-serif;
+      color: var(--ink);
+      background: linear-gradient(140deg, #f9f7f1, #f0efe9);
+      min-height: 100vh;
+      padding: 12px;
+    }
+
+    .app {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 12px 28px rgba(30, 41, 51, 0.1);
+      display: grid;
+      gap: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .toggle-btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font: inherit;
+      font-weight: 700;
+      color: #243b53;
+      cursor: pointer;
+    }
+
+    .toggle-btn:hover {
+      border-color: #9ab7ca;
+    }
+
+    .reset-btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font: inherit;
+      font-weight: 700;
+      color: #243b53;
+      cursor: pointer;
+    }
+
+    .reset-btn:hover {
+      border-color: #9ab7ca;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) minmax(360px, 1.2fr);
+      gap: 14px;
+    }
+
+    .left-col,
+    .right-col {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 12px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .right-col {
+      position: relative;
+    }
+
+    .app.right-hidden .right-col {
+      pointer-events: none;
+    }
+
+    .app.right-hidden .right-col::after {
+      content: "Arm Parameters Hidden";
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: rgba(203, 211, 219, 0.98);
+      backdrop-filter: blur(3px);
+      color: #334e68;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      display: grid;
+      place-items: center;
+      z-index: 3;
+    }
+
+    .section-title {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .arm-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .arm-btn {
+      border: 3px solid var(--border);
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 10px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      transition: 140ms ease;
+      display: grid;
+      gap: 6px;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .arm-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(0.98);
+    }
+
+    .arm-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+      transform: none;
+    }
+
+    .arm-meta {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .row {
+      display: grid;
+      gap: 4px;
+    }
+
+    .arm-control {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .arm-control-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #243b53;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .value {
+      font-size: 14px;
+      color: #334e68;
+      font-weight: 600;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .plot {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .plot-title {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .plot-canvas {
+      width: 100%;
+      height: 220px;
+      display: block;
+    }
+
+    .stat {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 640px) {
+      .stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" id="app">
+    <h1>3-Arm Bandit</h1>
+    <div class="toolbar">
+      <button id="resetBtn" class="reset-btn">Reset</button>
+      <button id="toggleRightBtn" class="toggle-btn">Hide Right Values</button>
+    </div>
+
+    <div class="layout">
+      <section class="left-col">
+        <div class="section-title">Pull Arms</div>
+        <section class="arm-buttons" id="armButtons"></section>
+
+        <div class="section-title">State of the Game</div>
+        <section class="stats">
+          <div class="stat">
+            <div class="stat-label">Total Pulls (Max 100)</div>
+            <div class="stat-value" id="pulls">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Last Reward</div>
+            <div class="stat-value" id="lastReward">-</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Average Reward</div>
+            <div class="stat-value" id="avgReward">0.000</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Cumulative Reward</div>
+            <div class="stat-value" id="cumulativeReward">0.000</div>
+          </div>
+        </section>
+      </section>
+
+      <aside class="right-col" id="rightCol">
+        <div class="section-title">Arm Parameters</div>
+        <section class="arm-control" id="armControls"></section>
+        <section class="plot">
+          <div class="plot-title">True Reward Parameters (Mean and Standard Deviation)</div>
+          <canvas id="armPlot" class="plot-canvas"></canvas>
+        </section>
+      </aside>
+    </div>
+
+  </main>
+
+  <script>
+    const MIN_STD = 0.01;
+    const MAX_PULLS = 100;
+    const ARM_COLORS = ["#0f766e", "#2563eb", "#b45309"];
+
+    const state = {
+      pulls: 0,
+      totalReward: 0,
+      lastReward: null,
+      gameOver: false,
+      arms: createInitialArms()
+    };
+
+    const el = {
+      app: document.getElementById("app"),
+      resetBtn: document.getElementById("resetBtn"),
+      armButtons: document.getElementById("armButtons"),
+      armControls: document.getElementById("armControls"),
+      toggleRightBtn: document.getElementById("toggleRightBtn"),
+      armPlot: document.getElementById("armPlot"),
+      pulls: document.getElementById("pulls"),
+      lastReward: document.getElementById("lastReward"),
+      avgReward: document.getElementById("avgReward"),
+      cumulativeReward: document.getElementById("cumulativeReward")
+    };
+
+    function init() {
+      state.showRightColumn = false;
+      state.gameOver = false;
+      bindEvents();
+      render();
+    }
+
+    function bindEvents() {
+      el.armControls.addEventListener("input", (event) => {
+        const slider = event.target;
+        if (!(slider instanceof HTMLInputElement)) return;
+        if (slider.type !== "range") return;
+        const arm = Number(slider.dataset.arm);
+        if (Number.isNaN(arm)) return;
+        const value = Number(slider.value);
+        if (slider.dataset.param === "mean") {
+          state.arms[arm].mean = value;
+        } else if (slider.dataset.param === "std") {
+          state.arms[arm].std = value;
+        } else {
+          return;
+        }
+        const valueEl = slider.parentElement && slider.parentElement.querySelector(".value");
+        if (valueEl) valueEl.textContent = value.toFixed(2);
+        renderPlot();
+      });
+
+      el.armButtons.addEventListener("click", (event) => {
+        if (state.gameOver) return;
+        const button = event.target.closest(".arm-btn");
+        if (!button) return;
+        const armIndex = Number(button.dataset.arm);
+        if (Number.isNaN(armIndex)) return;
+        pullArm(armIndex);
+        render();
+      });
+
+      el.resetBtn.addEventListener("click", () => {
+        resetGame();
+        render();
+      });
+
+      el.toggleRightBtn.addEventListener("click", () => {
+        if (state.gameOver) return;
+        state.showRightColumn = !state.showRightColumn;
+        renderLayout();
+        if (state.showRightColumn) renderPlot();
+      });
+    }
+
+    function render() {
+      renderArmButtons();
+      renderControls();
+      renderLayout();
+      renderPlot();
+      renderStats();
+    }
+
+    function renderArmButtons() {
+      el.armButtons.innerHTML = state.arms
+        .map((arm, i) => {
+          const disabledAttr = state.gameOver ? "disabled" : "";
+          return `
+            <button class="arm-btn" data-arm="${i}" style="border-color:${ARM_COLORS[i]};" ${disabledAttr}>
+              <div>Pull Arm ${i + 1}</div>
+              <div class="arm-meta">pulls: ${arm.pulls}</div>
+            </button>
+          `;
+        })
+        .join("");
+    }
+
+    function renderControls() {
+      el.armControls.innerHTML = state.arms
+        .map((arm, i) => {
+          const meanId = `meanSlider${i}`;
+          const stdId = `stdSlider${i}`;
+          return `
+            <div class="arm-column">
+              <div class="arm-control-title">Arm ${i + 1}</div>
+              <div class="row">
+                <label class="label" for="${meanId}">True Mean μ</label>
+                <input id="${meanId}" data-arm="${i}" data-param="mean" type="range" min="0" max="1" step="0.01" value="${arm.mean}" />
+                <div class="value">${arm.mean.toFixed(2)}</div>
+              </div>
+              <div class="row">
+                <label class="label" for="${stdId}">True Std Dev σ</label>
+                <input id="${stdId}" data-arm="${i}" data-param="std" type="range" min="0.01" max="0.5" step="0.01" value="${arm.std}" />
+                <div class="value">${arm.std.toFixed(2)}</div>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    function renderStats() {
+      const avg = state.pulls ? state.totalReward / state.pulls : 0;
+      el.pulls.textContent = `${state.pulls}/${MAX_PULLS}`;
+      el.lastReward.textContent = state.lastReward === null ? "-" : state.lastReward.toFixed(3);
+      el.avgReward.textContent = avg.toFixed(3);
+      el.cumulativeReward.textContent = state.totalReward.toFixed(3);
+    }
+
+    function renderLayout() {
+      if (state.gameOver) state.showRightColumn = true;
+      el.app.classList.toggle("right-hidden", !state.showRightColumn);
+      if (state.gameOver) {
+        el.toggleRightBtn.textContent = "True Values Revealed";
+        el.toggleRightBtn.disabled = true;
+      } else {
+        el.toggleRightBtn.textContent = state.showRightColumn ? "Hide Right Values" : "Show Right Values";
+        el.toggleRightBtn.disabled = false;
+      }
+    }
+
+    function renderPlot() {
+      const canvas = el.armPlot;
+      const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.floor(canvas.clientWidth * dpr);
+      const height = Math.floor(canvas.clientHeight * dpr);
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      ctx.clearRect(0, 0, w, h);
+
+      const pad = { left: 46, right: 14, top: 20, bottom: 30 };
+      const plotW = w - pad.left - pad.right;
+      const plotH = h - pad.top - pad.bottom;
+      const rowH = plotH / state.arms.length;
+
+      const x = (value) => pad.left + value * plotW;
+
+      ctx.strokeStyle = "#d7dee5";
+      ctx.lineWidth = 1;
+      for (let t = 0; t <= 4; t += 1) {
+        const v = t / 4;
+        const tx = x(v);
+        ctx.beginPath();
+        ctx.moveTo(tx, pad.top);
+        ctx.lineTo(tx, h - pad.bottom);
+        ctx.stroke();
+        ctx.fillStyle = "#52606d";
+        ctx.font = "11px Space Grotesk, sans-serif";
+        ctx.fillText(v.toFixed(2), tx - 12, h - 10);
+      }
+
+      state.arms.forEach((arm, i) => {
+        const y = pad.top + rowH * (i + 0.5);
+        const left = x(Math.max(0, arm.mean - arm.std));
+        const right = x(Math.min(1, arm.mean + arm.std));
+        const meanX = x(arm.mean);
+        const color = ARM_COLORS[i % ARM_COLORS.length];
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 8;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
+        ctx.stroke();
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(meanX, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#243b53";
+        ctx.font = "12px Space Grotesk, sans-serif";
+        ctx.fillText(`Arm ${i + 1}`, 8, y + 4);
+        ctx.fillText(`μ=${arm.mean.toFixed(2)}  σ=${arm.std.toFixed(2)}`, Math.min(w - 128, right + 8), y + 4);
+      });
+    }
+
+    function pullArm(i) {
+      if (state.gameOver) return;
+      const arm = state.arms[i];
+      const reward = sampleNormal(arm.mean, arm.std);
+      arm.pulls += 1;
+      state.pulls += 1;
+      state.totalReward += reward;
+      state.lastReward = reward;
+      if (state.pulls >= MAX_PULLS) {
+        state.pulls = MAX_PULLS;
+        endGame();
+      }
+    }
+
+    function resetGame() {
+      state.pulls = 0;
+      state.totalReward = 0;
+      state.lastReward = null;
+      state.gameOver = false;
+      state.showRightColumn = false;
+      state.arms.forEach((arm) => {
+        arm.pulls = 0;
+        arm.mean = randomMean();
+        arm.std = MIN_STD;
+      });
+    }
+
+    function createInitialArms() {
+      return [
+        { mean: randomMean(), std: MIN_STD, pulls: 0 },
+        { mean: randomMean(), std: MIN_STD, pulls: 0 },
+        { mean: randomMean(), std: MIN_STD, pulls: 0 }
+      ];
+    }
+
+    function randomMean() {
+      return 0.1 + Math.random() * 0.8;
+    }
+
+    function endGame() {
+      state.gameOver = true;
+      state.showRightColumn = true;
+    }
+
+    function sampleNormal(mean, std) {
+      const u1 = Math.max(1e-12, Math.random());
+      const u2 = Math.random();
+      const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+      return mean + std * z;
+    }
+
+    window.addEventListener("resize", () => {
+      renderPlot();
+    });
+
+    init();
+  </script>
+</body>
+</html>

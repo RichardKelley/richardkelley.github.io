@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Binary Bayes Net Demo: C -> T</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --ink: #1c2738;
+      --sub: #4f5f78;
+      --line: #d6deea;
+      --accent: #0b7285;
+      --accent-soft: #e1f2f5;
+      --ok: #177245;
+      --ok-soft: #ddf5e8;
+      --warn: #9a3412;
+      --warn-soft: #ffedd5;
+      --shadow: 0 8px 20px rgba(16, 24, 40, 0.07);
+      --radius: 12px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(1200px 800px at 15% -20%, #d6edf3 0%, var(--bg) 58%);
+      color: var(--ink);
+      font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
+      height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      padding: 12px;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 12px;
+      max-width: 1500px;
+      margin: 0 auto;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+      min-height: 200px;
+    }
+
+    .panel h2 {
+      margin: 0 0 8px;
+      font-size: 1.03rem;
+      line-height: 1.2;
+    }
+
+    .small {
+      color: var(--sub);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      margin: 0 0 8px;
+    }
+
+    .top-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .graph-area {
+      position: relative;
+      width: 100%;
+    }
+
+    .canvas-wrap {
+      width: 100%;
+      height: 260px;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      background: #fafcff;
+      overflow: hidden;
+    }
+
+    #bayesCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .graph-table {
+      position: absolute;
+      z-index: 2;
+      background: rgba(255, 255, 255, 0.97);
+      border: 1px solid #c6d5ea;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      padding: 6px;
+    }
+
+    .graph-table-c {
+      left: 8px;
+      top: 8px;
+      width: 38%;
+    }
+
+    .graph-table-t {
+      right: 8px;
+      top: 8px;
+      width: 50%;
+    }
+
+    .graph-table .mini-title {
+      margin: 0 0 4px;
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: #254260;
+      letter-spacing: 0.01em;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      text-align: center;
+    }
+
+    .graph-table table {
+      font-size: 0.72rem;
+    }
+
+    .graph-table th,
+    .graph-table td {
+      padding: 3px 4px;
+    }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0 4px;
+    }
+
+    .control-row label {
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .value-pill {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      background: var(--accent-soft);
+      color: #0a4b57;
+      border: 1px solid #b9dce4;
+      border-radius: 999px;
+      padding: 2px 8px;
+      min-width: 72px;
+      text-align: center;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
+    select, button {
+      width: 100%;
+      border: 1px solid #b7c4d8;
+      border-radius: 8px;
+      padding: 8px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 0.9rem;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      transition: transform 0.08s ease, background 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    button:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: #0b7285;
+      color: #fff;
+      border-color: #0b7285;
+    }
+
+    .table-block { margin-bottom: 10px; }
+
+    .table-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin: 0 0 5px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      table-layout: fixed;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 5px 6px;
+      text-align: center;
+      vertical-align: middle;
+      word-wrap: break-word;
+    }
+
+    th {
+      background: #eef4fc;
+      font-weight: 700;
+    }
+
+    .cell-note {
+      display: block;
+      margin-top: 2px;
+      color: #5f708c;
+      font-size: 0.74rem;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+    }
+
+    .evidence {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .radio {
+      border: 1px solid #c9d6e9;
+      border-radius: 8px;
+      padding: 6px 8px;
+      background: #fbfdff;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .normalizer {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .normalizer .box {
+      border: 1px solid #c4d2e8;
+      border-radius: 8px;
+      padding: 6px;
+      background: #f8fbff;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+    }
+
+    .teach {
+      margin-top: 8px;
+      background: #f3f8ff;
+      border: 1px solid #cad9ee;
+      border-radius: 10px;
+      padding: 8px;
+      font-size: 0.84rem;
+      color: #37506f;
+      line-height: 1.35;
+    }
+
+    .counts {
+      margin-top: 6px;
+      padding: 8px;
+      border: 1px solid #cad9ee;
+      border-radius: 9px;
+      background: #f8fbff;
+    }
+
+    .counts-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.85rem;
+      margin-bottom: 5px;
+    }
+
+    .counts-range {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .undefined {
+      color: #9a3412;
+      font-style: italic;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+    }
+
+    @media (max-width: 1180px) {
+      .app {
+        grid-template-columns: 1fr;
+        max-width: 900px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" aria-label="Binary Bayes net teaching demo">
+    <section class="panel" aria-labelledby="leftPanelTitle">
+      <h2 id="leftPanelTitle">Conditional Probability Playground</h2>
+      <p class="small">
+        Setup: a person either has the condition (<code>C=1</code>) or does not (<code>C=0</code>). The test can come back
+        positive (<code>T=1</code>) or negative (<code>T=0</code>). The arrow <strong>C -&gt; T</strong> means the true condition
+        affects how likely each test result is.
+      </p>
+
+      <div class="top-card">
+        <div class="graph-area">
+          <div class="canvas-wrap">
+            <canvas id="bayesCanvas" aria-label="Bayes net canvas"></canvas>
+          </div>
+
+          <div class="graph-table graph-table-c" aria-label="Prior table beside Condition node">
+            <p class="mini-title">P(C): Probability the condition is present (C = 1)</p>
+            <table aria-label="Prior table P(C)">
+              <thead>
+                <tr><th>C</th><th>P(C)</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>0</td><td id="priorC0">0.990</td></tr>
+                <tr><td>1</td><td id="priorC1">0.010</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="graph-table graph-table-t" aria-label="Conditional table beside Test node">
+            <p class="mini-title">Conditional P(T | C)</p>
+            <table aria-label="Conditional probability table P(T|C)">
+              <thead>
+                <tr><th>C</th><th>P(T=1|C)</th><th>P(T=0|C)</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td id="cptC1T1">0.950</td>
+                  <td id="cptC1T0">0.050</td>
+                </tr>
+                <tr>
+                  <td>0</td>
+                  <td id="cptC0T1">0.050</td>
+                  <td id="cptC0T0">0.950</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div class="control-row">
+            <label for="presetSelect">Scenario preset</label>
+          </div>
+          <select id="presetSelect" aria-label="Scenario presets">
+            <option value="rare-good">Rare condition, good test</option>
+            <option value="common-good">Common condition, good test</option>
+            <option value="mediocre">Mediocre test</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="control-row">
+            <label for="pC">Prior/base rate (chance condition is present) = P(C=1)</label>
+            <span class="value-pill" id="pCVal">0.010</span>
+          </div>
+          <input id="pC" type="range" min="0" max="1" step="0.001" value="0.01" />
+
+          <div class="control-row">
+            <label for="sens">sensitivity = P(T=1 | C=1)</label>
+            <span class="value-pill" id="sensVal">0.950</span>
+          </div>
+          <input id="sens" type="range" min="0" max="1" step="0.001" value="0.95" />
+
+          <div class="control-row">
+            <label for="fpr">false positive rate = P(T=1 | C=0)</label>
+            <span class="value-pill" id="fprVal">0.050</span>
+          </div>
+          <input id="fpr" type="range" min="0" max="1" step="0.001" value="0.05" />
+        </div>
+
+        <div>
+          <button class="btn-primary" id="resetBtn" type="button">Reset Demo</button>
+        </div>
+
+      <div class="counts">
+        <div class="counts-top">
+          <label><input type="checkbox" id="showCounts" /> Show expected counts out of N</label>
+          <span class="value-pill" id="nVal">1000</span>
+        </div>
+        <div class="counts-range">
+          <input id="nSlider" type="range" min="100" max="100000" step="100" value="1000" disabled />
+        </div>
+      </div>
+
+      <div class="table-block" style="margin-top: 8px;">
+        <div class="table-title">Joint table P(C,T)</div>
+        <table aria-label="Joint probability table P(C,T)">
+          <thead>
+            <tr><th></th><th>T=0</th><th>T=1</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>C=0</th>
+              <td id="jointC0T0">0.941</td>
+              <td id="jointC0T1">0.050</td>
+            </tr>
+            <tr>
+              <th>C=1</th>
+              <td id="jointC1T0">0.001</td>
+              <td id="jointC1T1">0.010</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="rightPanelTitle">
+      <h2 id="rightPanelTitle">Evidence and Posterior</h2>
+      <p class="small">Choose observed evidence for T. Posterior updates by Bayes' rule using the normalizer P(T).</p>
+
+      <div class="evidence" role="radiogroup" aria-label="Observed evidence">
+        <label class="radio"><input type="radio" name="evidence" value="1" checked /> Observed T = 1 (positive)</label>
+        <label class="radio"><input type="radio" name="evidence" value="0" /> Observed T = 0 (negative)</label>
+      </div>
+
+      <div class="normalizer" aria-label="Evidence normalizers">
+        <div class="box">P(T=1) = <span id="pt1">0.059</span></div>
+        <div class="box">P(T=0) = <span id="pt0">0.941</span></div>
+      </div>
+
+      <div class="table-block">
+        <div class="table-title">Posterior table P(C | T = observed)</div>
+        <table aria-label="Posterior table">
+          <thead>
+            <tr><th>C</th><th id="posteriorHead">P(C | T=1)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td id="postC0">0.839</td></tr>
+            <tr><td>1</td><td id="postC1">0.161</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="degenerateMsg" class="small" style="min-height: 18px;"></div>
+
+      <div class="teach">
+        <strong>How to read this:</strong><br />
+        Prior/base rate: starting chance before seeing test data, <code>P(C)</code>.<br />
+        Likelihood/CPT: test behavior given condition, <code>P(T|C)</code>.<br />
+        Evidence: pick observed <code>T</code>.<br />
+        Posterior: updated belief <code>P(C|T)</code> = (prior x likelihood) / <code>P(T)</code>.
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const presets = {
+        "rare-good": { pC: 0.01, sens: 0.95, fpr: 0.05 },
+        "common-good": { pC: 0.20, sens: 0.95, fpr: 0.05 },
+        "mediocre": { pC: 0.10, sens: 0.70, fpr: 0.20 }
+      };
+
+      const state = {
+        pC: 0.01,
+        sens: 0.95,
+        fpr: 0.05,
+        observedT: 1,
+        showCounts: false,
+        N: 1000
+      };
+
+      const els = {
+        canvas: document.getElementById("bayesCanvas"),
+        pC: document.getElementById("pC"),
+        sens: document.getElementById("sens"),
+        fpr: document.getElementById("fpr"),
+        pCVal: document.getElementById("pCVal"),
+        sensVal: document.getElementById("sensVal"),
+        fprVal: document.getElementById("fprVal"),
+        presetSelect: document.getElementById("presetSelect"),
+        showCounts: document.getElementById("showCounts"),
+        nSlider: document.getElementById("nSlider"),
+        nVal: document.getElementById("nVal"),
+        priorC0: document.getElementById("priorC0"),
+        priorC1: document.getElementById("priorC1"),
+        cptC1T1: document.getElementById("cptC1T1"),
+        cptC1T0: document.getElementById("cptC1T0"),
+        cptC0T1: document.getElementById("cptC0T1"),
+        cptC0T0: document.getElementById("cptC0T0"),
+        jointC0T0: document.getElementById("jointC0T0"),
+        jointC0T1: document.getElementById("jointC0T1"),
+        jointC1T0: document.getElementById("jointC1T0"),
+        jointC1T1: document.getElementById("jointC1T1"),
+        pt1: document.getElementById("pt1"),
+        pt0: document.getElementById("pt0"),
+        posteriorHead: document.getElementById("posteriorHead"),
+        postC0: document.getElementById("postC0"),
+        postC1: document.getElementById("postC1"),
+        degenerateMsg: document.getElementById("degenerateMsg"),
+        resetBtn: document.getElementById("resetBtn"),
+        evidenceInputs: document.querySelectorAll('input[name="evidence"]')
+      };
+
+      function clamp01(x) {
+        return Math.min(1, Math.max(0, x));
+      }
+
+      function fmtProb(x) {
+        return Number.isFinite(x) ? x.toFixed(3) : "undefined";
+      }
+
+      function fmtCount(x) {
+        return Math.round(x).toLocaleString();
+      }
+
+      // Model math only: prior, CPT, joint, evidence marginals, posteriors.
+      function computeModel(pC, sens, fpr) {
+        const priorC1 = clamp01(pC);
+        const priorC0 = 1 - priorC1;
+
+        const cpt = {
+          c1t1: clamp01(sens),
+          c1t0: 1 - clamp01(sens),
+          c0t1: clamp01(fpr),
+          c0t0: 1 - clamp01(fpr)
+        };
+
+        const joint = {
+          c1t1: priorC1 * cpt.c1t1,
+          c1t0: priorC1 * cpt.c1t0,
+          c0t1: priorC0 * cpt.c0t1,
+          c0t0: priorC0 * cpt.c0t0
+        };
+
+        const denom1 = joint.c1t1 + joint.c0t1; // P(T=1)
+        const denom0 = joint.c1t0 + joint.c0t0; // P(T=0)
+
+        const postT1 = safePosterior(joint.c1t1, denom1);
+        const postT0 = safePosterior(joint.c1t0, denom0);
+
+        return {
+          prior: { c0: priorC0, c1: priorC1 },
+          cpt,
+          joint,
+          evidence: { pt1: denom1, pt0: denom0 },
+          posterior: {
+            t1: { c1: postT1.value, c0: postT1.complement, defined: postT1.defined },
+            t0: { c1: postT0.value, c0: postT0.complement, defined: postT0.defined }
+          }
+        };
+      }
+
+      function safePosterior(numer, denom) {
+        if (denom <= 0) {
+          return { value: NaN, complement: NaN, defined: false };
+        }
+        const value = numer / denom;
+        return { value, complement: 1 - value, defined: true };
+      }
+
+      function updateStateFromInputs() {
+        state.pC = clamp01(parseFloat(els.pC.value));
+        state.sens = clamp01(parseFloat(els.sens.value));
+        state.fpr = clamp01(parseFloat(els.fpr.value));
+        state.N = Math.round(parseFloat(els.nSlider.value));
+      }
+
+      function setSliders(values) {
+        els.pC.value = clamp01(values.pC).toFixed(3);
+        els.sens.value = clamp01(values.sens).toFixed(3);
+        els.fpr.value = clamp01(values.fpr).toFixed(3);
+        updateStateFromInputs();
+      }
+
+      function renderNumbers(model) {
+        els.pCVal.textContent = fmtProb(state.pC);
+        els.sensVal.textContent = fmtProb(state.sens);
+        els.fprVal.textContent = fmtProb(state.fpr);
+        els.nVal.textContent = state.N.toLocaleString();
+
+        els.priorC0.textContent = fmtProb(model.prior.c0);
+        els.priorC1.textContent = fmtProb(model.prior.c1);
+
+        els.cptC1T1.textContent = fmtProb(model.cpt.c1t1);
+        els.cptC1T0.textContent = fmtProb(model.cpt.c1t0);
+        els.cptC0T1.textContent = fmtProb(model.cpt.c0t1);
+        els.cptC0T0.textContent = fmtProb(model.cpt.c0t0);
+
+        setJointCell(els.jointC0T0, model.joint.c0t0);
+        setJointCell(els.jointC0T1, model.joint.c0t1);
+        setJointCell(els.jointC1T0, model.joint.c1t0);
+        setJointCell(els.jointC1T1, model.joint.c1t1);
+
+        els.pt1.textContent = fmtProb(model.evidence.pt1);
+        els.pt0.textContent = fmtProb(model.evidence.pt0);
+
+        const post = state.observedT === 1 ? model.posterior.t1 : model.posterior.t0;
+        els.posteriorHead.textContent = state.observedT === 1 ? "P(C | T=1)" : "P(C | T=0)";
+
+        setPosteriorCell(els.postC1, post.c1, post.defined);
+        setPosteriorCell(els.postC0, post.c0, post.defined);
+
+        if (!post.defined) {
+          const badDen = state.observedT === 1 ? "P(T=1)" : "P(T=0)";
+          els.degenerateMsg.textContent =
+            "Posterior undefined because normalizer " + badDen + " = 0 (0/0 case).";
+        } else {
+          els.degenerateMsg.textContent = "";
+        }
+      }
+
+      function setPosteriorCell(el, val, defined) {
+        if (!defined) {
+          el.innerHTML = '<span class="undefined" title="Undefined because denominator is zero.">undefined</span>';
+          return;
+        }
+        el.textContent = fmtProb(val);
+      }
+
+      function setJointCell(el, prob) {
+        const probStr = fmtProb(prob);
+        if (!state.showCounts) {
+          el.textContent = probStr;
+          return;
+        }
+        const count = prob * state.N;
+        el.innerHTML = probStr + '<span class="cell-note">count ~ ' + fmtCount(count) + "</span>";
+      }
+
+      function renderCanvas() {
+        const canvas = els.canvas;
+        const ctx = canvas.getContext("2d");
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+
+        const cssW = Math.max(320, rect.width);
+        const cssH = Math.max(150, rect.height);
+
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssH * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        ctx.clearRect(0, 0, cssW, cssH);
+
+        const y = cssH * 0.66;
+        const x1 = cssW * 0.28;
+        const x2 = cssW * 0.72;
+        const r = Math.min(38, cssH * 0.2, cssW * 0.11);
+
+        drawArrow(ctx, x1 + r, y, x2 - r, y);
+        drawNode(ctx, x1, y, r, "Condition", "(C)");
+        drawNode(ctx, x2, y, r, "Test", "(T)");
+      }
+
+      function drawNode(ctx, x, y, r, name, symbol) {
+        ctx.beginPath();
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#0b7285";
+        ctx.lineWidth = 2;
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#17324a";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "700 13px Trebuchet MS, Segoe UI, sans-serif";
+        ctx.fillText(name, x, y - 8);
+        ctx.font = "600 12px Trebuchet MS, Segoe UI, sans-serif";
+        ctx.fillText(symbol, x, y + 10);
+      }
+
+      function drawArrow(ctx, x1, y1, x2, y2) {
+        const head = 10;
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = "#275d8b";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - head * Math.cos(angle - Math.PI / 6), y2 - head * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(x2 - head * Math.cos(angle + Math.PI / 6), y2 - head * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fillStyle = "#275d8b";
+        ctx.fill();
+      }
+
+      function renderAll() {
+        updateStateFromInputs();
+        const model = computeModel(state.pC, state.sens, state.fpr);
+        renderNumbers(model);
+      }
+
+      function applyPreset(key) {
+        const preset = presets[key];
+        if (!preset) return;
+        setSliders(preset);
+        renderAll();
+      }
+
+      function resetDemo() {
+        els.presetSelect.value = "rare-good";
+        applyPreset("rare-good");
+        state.observedT = 1;
+        els.evidenceInputs.forEach((el) => {
+          el.checked = el.value === "1";
+        });
+        state.showCounts = false;
+        els.showCounts.checked = false;
+        state.N = 1000;
+        els.nSlider.value = "1000";
+        els.nSlider.disabled = true;
+        renderAll();
+      }
+
+      function addEventListeners() {
+        [els.pC, els.sens, els.fpr, els.nSlider].forEach((input) => {
+          input.addEventListener("input", renderAll);
+        });
+
+        els.presetSelect.addEventListener("change", (e) => {
+          applyPreset(e.target.value);
+        });
+
+        els.evidenceInputs.forEach((radio) => {
+          radio.addEventListener("change", (e) => {
+            state.observedT = Number(e.target.value);
+            renderAll();
+          });
+        });
+
+        els.showCounts.addEventListener("change", () => {
+          state.showCounts = els.showCounts.checked;
+          els.nSlider.disabled = !state.showCounts;
+          renderAll();
+        });
+
+        els.resetBtn.addEventListener("click", resetDemo);
+
+        window.addEventListener("resize", renderCanvas);
+      }
+
+      addEventListeners();
+      resetDemo();
+      renderCanvas();
+    })();
+  </script>
+</body>
+</html>
