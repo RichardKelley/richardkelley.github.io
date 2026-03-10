@@ -1,6 +1,7 @@
 # Site settings
 title: Richard Kelley
 description: "AI and Robotics."
+lang: en
 url: "http://richardkelley.github.io"
 author:
   name: "Richard Kelley"

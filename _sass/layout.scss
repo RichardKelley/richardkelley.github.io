@@ -210,6 +210,7 @@ img[title="Monochrome"] {
   }
 
 code {
+  font-family: "CMU Typewriter Text", "Computer Modern Typewriter", "Courier New", monospace;
   color: lighten($text-color, 35%);
   background-color: lighten($background-color, 35%);
 }
@@ -228,6 +229,60 @@ code {
 
 #page ul, #page ol {
   padding-left: 1.5em;
+}
+
+@media (max-width: 700px) {
+  #page table,
+  #post-page .content table {
+    display: block;
+    width: max-content !important;
+    min-width: 100%;
+    max-width: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    table-layout: auto !important;
+    font-size: 0.92em;
+  }
+
+  #page th,
+  #page td,
+  #post-page .content th,
+  #post-page .content td {
+    vertical-align: top;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  #page th,
+  #page td {
+    padding: 0.3em;
+  }
+
+  #page table ul,
+  #post-page .content table ul,
+  #page table ol,
+  #post-page .content table ol {
+    margin: 0;
+    padding-left: 1.1em;
+  }
+}
+
+@media (min-width: 940px) {
+  #page p,
+  #page ul,
+  #page ol,
+  #page blockquote,
+  #post-page .content p,
+  #post-page .content ul,
+  #post-page .content ol,
+  #post-page .content blockquote {
+    text-align: justify;
+    text-justify: inter-word;
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    hyphens: auto;
+  }
 }
 
 /* Paginator */
