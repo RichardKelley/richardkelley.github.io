@@ -1,0 +1,1023 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Strings to Tokens to Embeddings</title>
+    <style>
+      :root {
+        --bg: #f3efe6;
+        --bg-deep: #efe2c7;
+        --panel: rgba(255, 250, 240, 0.88);
+        --panel-strong: rgba(255, 252, 247, 0.96);
+        --ink: #18262d;
+        --muted: #5c6a71;
+        --line: rgba(24, 38, 45, 0.12);
+        --accent: #1d6fd3;
+        --accent-soft: rgba(29, 111, 211, 0.14);
+        --accent-strong: #0d4f9e;
+        --warm: #d96e38;
+        --warm-soft: rgba(217, 110, 56, 0.14);
+        --mint: #16856e;
+        --mint-soft: rgba(22, 133, 110, 0.14);
+        --shadow: 0 22px 56px rgba(54, 39, 16, 0.14);
+        --matrix-token-width: 150px;
+        --matrix-index-width: 96px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.75), transparent 32%),
+          radial-gradient(circle at bottom right, rgba(248, 198, 132, 0.35), transparent 30%),
+          linear-gradient(160deg, var(--bg) 0%, #f0eadc 55%, var(--bg-deep) 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.28;
+        background-image:
+          linear-gradient(rgba(26, 42, 50, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(26, 42, 50, 0.05) 1px, transparent 1px);
+        background-size: 26px 26px;
+        mask-image: radial-gradient(circle at center, black 32%, transparent 84%);
+      }
+
+      .page {
+        width: min(1260px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 28px 0 40px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 11ch;
+        font-size: clamp(2.2rem, 4.5vw, 4.2rem);
+        line-height: 0.92;
+        letter-spacing: -0.045em;
+      }
+
+      .subtitle {
+        max-width: 72ch;
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 1.03rem;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 13px;
+        border-radius: 999px;
+        background: var(--panel);
+        border: 1px solid rgba(24, 38, 45, 0.08);
+        box-shadow: 0 8px 20px rgba(66, 49, 22, 0.08);
+        font-size: 0.93rem;
+      }
+
+      .chip strong {
+        font-weight: 700;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .panel {
+        background: var(--panel-strong);
+        border: 1px solid rgba(24, 38, 45, 0.08);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      .full-span {
+        grid-column: 1 / -1;
+      }
+
+      .stack {
+        display: grid;
+        gap: 18px;
+      }
+
+      .card {
+        padding: 18px;
+      }
+
+      .tokenizer-card {
+        padding: 18px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .card-head h2,
+      .plot-head h2 {
+        margin: 0;
+        font-size: 1.08rem;
+        letter-spacing: -0.02em;
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .tokenizer-input {
+        width: 100%;
+        border: 1px solid rgba(24, 38, 45, 0.12);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.94);
+        color: var(--ink);
+        padding: 14px 16px;
+        font: inherit;
+        font-size: 1rem;
+      }
+
+      .tokenizer-input:focus {
+        outline: 2px solid rgba(29, 111, 211, 0.15);
+        border-color: rgba(29, 111, 211, 0.3);
+      }
+
+      .sequence-block {
+        display: grid;
+        gap: 8px;
+      }
+
+      .sequence-label {
+        font-size: 0.86rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .sequence-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-height: 42px;
+        padding: 10px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.66);
+      }
+
+      .sequence-chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-weight: 700;
+        font-size: 0.92rem;
+      }
+
+      .sequence-chip.id-chip {
+        background: rgba(24, 38, 45, 0.08);
+        color: var(--ink);
+        font-family: ui-monospace, "SF Mono", Monaco, Consolas, monospace;
+      }
+
+      .sequence-chip.unknown {
+        background: var(--warm-soft);
+        color: #964c22;
+      }
+
+      .sequence-empty {
+        color: var(--muted);
+        font-size: 0.94rem;
+        align-self: center;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      button {
+        appearance: none;
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 120ms ease, background 120ms ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      .primary-btn {
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      }
+
+      .ghost-btn {
+        color: var(--accent-strong);
+        background: var(--accent-soft);
+      }
+
+      .table-wrap {
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.64);
+      }
+
+      .matrix-wrap {
+        position: relative;
+        padding: 12px 18px 12px 10px;
+        overflow: auto;
+      }
+
+      .matrix-wrap::before,
+      .matrix-wrap::after {
+        content: "";
+        position: absolute;
+        top: 16px;
+        bottom: 16px;
+        width: 12px;
+        border-top: 3px solid rgba(24, 38, 45, 0.6);
+        border-bottom: 3px solid rgba(24, 38, 45, 0.6);
+      }
+
+      .matrix-wrap::before {
+        left: calc(10px + var(--matrix-token-width) + var(--matrix-index-width) + 18px);
+        border-left: 3px solid rgba(24, 38, 45, 0.6);
+      }
+
+      .matrix-wrap::after {
+        right: 10px;
+        border-right: 3px solid rgba(24, 38, 45, 0.6);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 10px 10px;
+        text-align: left;
+        border-bottom: 1px solid rgba(24, 38, 45, 0.08);
+        vertical-align: middle;
+      }
+
+      thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: rgba(247, 243, 235, 0.96);
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+
+      tbody tr {
+        transition: background 120ms ease;
+      }
+
+      tbody tr.active {
+        background: rgba(29, 111, 211, 0.08);
+      }
+
+      tbody tr:hover {
+        background: rgba(29, 111, 211, 0.04);
+      }
+
+      .matrix-table {
+        table-layout: fixed;
+      }
+
+      .matrix-table th,
+      .matrix-table td {
+        border-bottom: 0;
+        padding: 8px 12px;
+      }
+
+      .matrix-table tbody tr {
+        background: transparent;
+      }
+
+      .matrix-table tbody tr:hover,
+      .matrix-table tbody tr.active {
+        background: rgba(29, 111, 211, 0.06);
+      }
+
+      .matrix-rowhead {
+        width: var(--matrix-index-width);
+        text-align: right;
+        font-family: ui-monospace, "SF Mono", Monaco, Consolas, monospace;
+        font-size: 0.95rem;
+        color: var(--muted);
+        font-weight: 700;
+        padding-right: 18px;
+      }
+
+      .matrix-tokenhead {
+        width: var(--matrix-token-width);
+        text-align: left;
+        padding-right: 16px;
+      }
+
+      .matrix-tokeninput {
+        width: 100%;
+        border: 1px solid rgba(24, 38, 45, 0.12);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.9);
+        color: var(--ink);
+        padding: 8px 10px;
+        font: inherit;
+      }
+
+      .matrix-tokeninput:focus {
+        outline: 2px solid rgba(29, 111, 211, 0.15);
+        border-color: rgba(29, 111, 211, 0.3);
+      }
+
+      .matrix-cell {
+        min-width: 0;
+        text-align: center;
+        font-family: ui-monospace, "SF Mono", Monaco, Consolas, monospace;
+        font-size: 1rem;
+        border-radius: 10px;
+        outline: none;
+        background: rgba(255, 255, 255, 0.58);
+      }
+
+      .matrix-cell:focus {
+        background: rgba(29, 111, 211, 0.1);
+        box-shadow: inset 0 0 0 2px rgba(29, 111, 211, 0.18);
+      }
+
+      input[type="text"],
+      input[type="number"] {
+        width: 100%;
+        border: 1px solid rgba(24, 38, 45, 0.12);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.94);
+        color: var(--ink);
+        padding: 9px 10px;
+        font: inherit;
+      }
+
+      input[type="text"]:focus,
+      input[type="number"]:focus {
+        outline: 2px solid rgba(29, 111, 211, 0.15);
+        border-color: rgba(29, 111, 211, 0.3);
+      }
+
+      .mini-btn {
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: var(--warm-soft);
+        color: #9b4a21;
+        font-size: 0.87rem;
+      }
+
+      .plot-card {
+        padding: 18px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .plot-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: start;
+      }
+
+      .plot-note {
+        max-width: 32ch;
+        color: var(--muted);
+        font-size: 0.94rem;
+        line-height: 1.5;
+      }
+
+      .plot-wrap {
+        position: relative;
+        border-radius: 24px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background:
+          radial-gradient(circle at top, rgba(255, 255, 255, 0.82), transparent 42%),
+          linear-gradient(180deg, #faf6ee 0%, #f3eadc 100%);
+      }
+
+      svg {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        touch-action: none;
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .legend-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 11px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.74);
+        border: 1px solid var(--line);
+        font-size: 0.9rem;
+      }
+
+      .swatch {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+      }
+
+      .point-label {
+        font-size: 15px;
+        font-weight: 700;
+        fill: #173348;
+        paint-order: stroke;
+        stroke: rgba(255, 252, 247, 0.92);
+        stroke-width: 5px;
+        stroke-linejoin: round;
+      }
+
+      .grid-line {
+        stroke: rgba(24, 38, 45, 0.08);
+        stroke-width: 1;
+      }
+
+      .axis-line {
+        stroke: rgba(24, 38, 45, 0.24);
+        stroke-width: 2;
+      }
+
+      .tick-label {
+        fill: rgba(24, 38, 45, 0.58);
+        font-size: 12px;
+      }
+
+      .point {
+        cursor: grab;
+      }
+
+      .point circle {
+        transition: r 120ms ease, fill 120ms ease;
+      }
+
+      .point.active circle,
+      .point:hover circle {
+        r: 10;
+        fill: var(--warm);
+      }
+
+      .dragging .point circle {
+        cursor: grabbing;
+      }
+
+      @media (max-width: 1000px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        h1 {
+          max-width: none;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page {
+          width: min(100vw - 20px, 1260px);
+          padding-top: 20px;
+        }
+
+        .card,
+        .plot-card {
+          padding: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <h1>From strings to tokens to embeddings</h1>
+        <p class="subtitle">
+          Fill in tokens and token IDs, assign each token ID a 2D embedding, and watch the vocabulary points move in
+          the plane. In the LLM sense, token IDs index rows of the embedding matrix, and each token maps to one such
+          row.
+        </p>
+        <div class="chips">
+          <div class="chip"><strong>Step 1</strong> enter a token</div>
+          <div class="chip"><strong>Step 2</strong> map tokens to token IDs</div>
+          <div class="chip"><strong>Step 3</strong> drag points to reshape the embedding space</div>
+        </div>
+      </section>
+
+      <section class="shell">
+        <section class="panel tokenizer-card full-span">
+          <div class="card-head">
+            <div>
+              <h2>Try a Sentence</h2>
+              <p class="eyebrow">Type a short sentence and the page will map each word to its token and token ID.</p>
+            </div>
+          </div>
+          <input
+            id="sentence-input"
+            class="tokenizer-input"
+            type="text"
+            value="the cat sees a dog"
+            placeholder="type a sentence"
+          />
+          <div class="sequence-block">
+            <div class="sequence-label">Token Sequence</div>
+            <div class="sequence-row" id="sentence-tokens"></div>
+          </div>
+          <div class="sequence-block">
+            <div class="sequence-label">Token IDs</div>
+            <div class="sequence-row" id="sentence-token-ids"></div>
+          </div>
+        </section>
+
+        <section class="panel card">
+          <div class="card-head">
+            <div>
+              <h2>Token-ID Embeddings</h2>
+              <p class="eyebrow">Each row contains the token string, its token ID, and the matching 2D embedding vector.</p>
+            </div>
+          </div>
+          <div class="table-wrap matrix-wrap">
+            <table class="matrix-table">
+              <tbody id="embedding-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel plot-card">
+          <div class="plot-head">
+            <div>
+              <h2>Embedding Plane</h2>
+              <p class="eyebrow">Word labels are drawn directly on the points.</p>
+            </div>
+            <div class="plot-note">
+              Drag any point to update the embedding matrix. Click a matrix row or a point to focus a token ID.
+            </div>
+          </div>
+
+          <div class="legend">
+              <div class="legend-pill">
+                <span class="swatch" style="background: var(--accent)"></span>
+              Token-ID point
+              </div>
+              <div class="legend-pill">
+                <span class="swatch" style="background: var(--warm)"></span>
+              Focused token ID
+            </div>
+            <div class="legend-pill">
+              <span class="swatch" style="background: var(--mint)"></span>
+              Shared token ID
+            </div>
+          </div>
+
+          <div class="plot-wrap">
+            <svg id="embedding-plot" viewBox="0 0 640 640" aria-label="2D embedding plane"></svg>
+          </div>
+
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const embeddingBody = document.getElementById("embedding-table-body");
+      const plot = document.getElementById("embedding-plot");
+      const sentenceInput = document.getElementById("sentence-input");
+      const sentenceTokens = document.getElementById("sentence-tokens");
+      const sentenceTokenIds = document.getElementById("sentence-token-ids");
+
+      const state = {
+        stringRows: [
+          { id: 1, token: "the", tokenId: 10, x: -1.8, y: -1.1 },
+          { id: 2, token: "a", tokenId: 11, x: -1.35, y: -0.9 },
+          { id: 3, token: "cat", tokenId: 101, x: -1.25, y: 1.15 },
+          { id: 4, token: "dog", tokenId: 102, x: -0.2, y: 1.45 },
+          { id: 5, token: "sees", tokenId: 150, x: 0.75, y: 0.95 },
+          { id: 6, token: "likes", tokenId: 151, x: 1.2, y: 0.35 },
+          { id: 7, token: "runs", tokenId: 152, x: 1.55, y: 1.35 },
+          { id: 8, token: "eats", tokenId: 153, x: 0.95, y: -0.15 },
+          { id: 9, token: "car", tokenId: 201, x: 1.75, y: -0.9 },
+          { id: 10, token: "vehicle", tokenId: 202, x: 2.25, y: -1.35 },
+        ],
+        activeTokenId: 10,
+        draggingId: null,
+        dragBounds: null,
+        plotBounds: null,
+      };
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function formatNumber(value) {
+        return Number.isFinite(value) ? value.toFixed(2) : "";
+      }
+
+      function formatTokenId(value) {
+        return Number.isInteger(value) ? String(value) : "";
+      }
+
+      function parseTokenId(value) {
+        const trimmed = String(value).trim();
+        if (trimmed === "") {
+          return "";
+        }
+        const parsed = Number.parseInt(trimmed, 10);
+        return Number.isInteger(parsed) ? parsed : "";
+      }
+
+      function getRowById(id) {
+        return state.stringRows.find((row) => row.id === id);
+      }
+
+      function getDisplayLabel(tokenId) {
+        const row = state.stringRows.find((entry) => entry.tokenId === tokenId && entry.token.trim() !== "");
+        if (!row) {
+          return `id ${tokenId}`;
+        }
+        return row.token.trim();
+      }
+
+      function tokenizeSentence(input) {
+        const parts = String(input).toLowerCase().match(/[a-z0-9']+/g) || [];
+        const vocab = new Map();
+        for (const row of state.stringRows) {
+          if (row.token.trim() !== "") {
+            vocab.set(row.token.trim().toLowerCase(), row);
+          }
+        }
+
+        return parts.map((part) => {
+          const row = vocab.get(part) || null;
+          return {
+            raw: part,
+            token: row ? row.token : part,
+            tokenId: row ? row.tokenId : "",
+            known: row !== null,
+          };
+        });
+      }
+
+      function renderSentenceTokenizer() {
+        const sequence = tokenizeSentence(sentenceInput.value);
+
+        if (sequence.length === 0) {
+          sentenceTokens.innerHTML = '<span class="sequence-empty">Type above to see the token sequence.</span>';
+          sentenceTokenIds.innerHTML = '<span class="sequence-empty">Token IDs will appear here.</span>';
+          return;
+        }
+
+        sentenceTokens.innerHTML = sequence
+          .map((item) => {
+            const className = item.known ? "sequence-chip" : "sequence-chip unknown";
+            return `<span class="${className}">${escapeHtml(item.token)}</span>`;
+          })
+          .join("");
+
+        sentenceTokenIds.innerHTML = sequence
+          .map((item) => {
+            const className = item.known ? "sequence-chip id-chip" : "sequence-chip id-chip unknown";
+            const label = item.tokenId === "" ? "?" : String(item.tokenId);
+            return `<span class="${className}">${escapeHtml(label)}</span>`;
+          })
+          .join("");
+      }
+
+      function refreshActiveRows() {
+        for (const tr of embeddingBody.querySelectorAll("tr[data-id]")) {
+          const tokenId = tr.dataset.tokenId === "" ? null : Number(tr.dataset.tokenId);
+          tr.classList.toggle("active", Number.isInteger(tokenId) && tokenId === state.activeTokenId);
+        }
+      }
+
+      function renderEmbeddingTable() {
+        embeddingBody.innerHTML = state.stringRows
+          .map((row) => {
+            const active = Number.isInteger(row.tokenId) && row.tokenId === state.activeTokenId ? "active" : "";
+            return `
+              <tr data-id="${row.id}" data-token-id="${formatTokenId(row.tokenId)}" class="${active}">
+                <td class="matrix-tokenhead">
+                  <input class="matrix-tokeninput" type="text" name="token" value="${escapeHtml(row.token)}" placeholder="token" />
+                </td>
+                <th scope="row" class="matrix-rowhead">${formatTokenId(row.tokenId)}</th>
+                <td class="matrix-cell" contenteditable="plaintext-only" spellcheck="false" data-field="x">${formatNumber(row.x)}</td>
+                <td class="matrix-cell" contenteditable="plaintext-only" spellcheck="false" data-field="y">${formatNumber(row.y)}</td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function niceStep(span) {
+        const rough = span / 8;
+        const power = 10 ** Math.floor(Math.log10(rough || 1));
+        const normalized = rough / power;
+        if (normalized < 1.5) return 1 * power;
+        if (normalized < 3) return 2 * power;
+        if (normalized < 7) return 5 * power;
+        return 10 * power;
+      }
+
+      function buildBounds() {
+        const valid = state.stringRows.filter((row) => Number.isFinite(row.x) && Number.isFinite(row.y));
+        if (valid.length === 0) {
+          return { minX: -3, maxX: 3, minY: -3, maxY: 3 };
+        }
+
+        const xs = valid.map((row) => row.x);
+        const ys = valid.map((row) => row.y);
+        const minX = Math.min(...xs);
+        const maxX = Math.max(...xs);
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
+        const span = Math.max(maxX - minX, maxY - minY, 4);
+        const half = span / 2 + 0.9;
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
+
+        return {
+          minX: centerX - half,
+          maxX: centerX + half,
+          minY: centerY - half,
+          maxY: centerY + half,
+        };
+      }
+
+      function worldToScreen(x, y, bounds) {
+        const pad = 62;
+        const width = 640 - pad * 2;
+        const height = 640 - pad * 2;
+        return {
+          x: pad + ((x - bounds.minX) / (bounds.maxX - bounds.minX || 1)) * width,
+          y: 640 - pad - ((y - bounds.minY) / (bounds.maxY - bounds.minY || 1)) * height,
+        };
+      }
+
+      function screenToWorld(clientX, clientY) {
+        const rect = plot.getBoundingClientRect();
+        const bounds = state.plotBounds;
+        const pad = 62;
+        const x = ((clientX - rect.left) / rect.width) * 640;
+        const y = ((clientY - rect.top) / rect.height) * 640;
+        const plotWidth = 640 - pad * 2;
+        const plotHeight = 640 - pad * 2;
+        const worldX = bounds.minX + ((x - pad) / plotWidth) * (bounds.maxX - bounds.minX);
+        const worldY = bounds.minY + ((640 - pad - y) / plotHeight) * (bounds.maxY - bounds.minY);
+        return {
+          x: Math.max(bounds.minX, Math.min(bounds.maxX, worldX)),
+          y: Math.max(bounds.minY, Math.min(bounds.maxY, worldY)),
+        };
+      }
+
+      function renderPlot() {
+        const bounds = state.draggingId !== null && state.dragBounds ? state.dragBounds : buildBounds();
+        state.plotBounds = bounds;
+        const step = niceStep(bounds.maxX - bounds.minX);
+        const axisX = worldToScreen(0, 0, bounds).x;
+        const axisY = worldToScreen(0, 0, bounds).y;
+
+        const grid = [];
+        for (let value = Math.ceil(bounds.minX / step) * step; value <= bounds.maxX + 0.001; value += step) {
+          const point = worldToScreen(value, 0, bounds);
+          grid.push(`<line class="grid-line" x1="${point.x}" y1="62" x2="${point.x}" y2="578"></line>`);
+          if (Math.abs(value) > 0.001) {
+            grid.push(`<text class="tick-label" x="${point.x + 4}" y="598">${value}</text>`);
+          }
+        }
+        for (let value = Math.ceil(bounds.minY / step) * step; value <= bounds.maxY + 0.001; value += step) {
+          const point = worldToScreen(0, value, bounds);
+          grid.push(`<line class="grid-line" x1="62" y1="${point.y}" x2="578" y2="${point.y}"></line>`);
+          if (Math.abs(value) > 0.001) {
+            grid.push(`<text class="tick-label" x="20" y="${point.y - 4}">${value}</text>`);
+          }
+        }
+
+        const points = state.stringRows
+          .filter((row) => Number.isFinite(row.x) && Number.isFinite(row.y))
+          .map((row) => {
+            const pos = worldToScreen(row.x, row.y, bounds);
+            const active = Number.isInteger(row.tokenId) && row.tokenId === state.activeTokenId;
+            const fill = "var(--accent)";
+            const label = getDisplayLabel(row.tokenId);
+
+            return `
+              <g class="point ${active ? "active" : ""}" data-id="${row.id}" data-token-id="${formatTokenId(row.tokenId)}">
+                <circle cx="${pos.x}" cy="${pos.y}" r="8.5" fill="${fill}" stroke="rgba(255, 252, 247, 0.96)" stroke-width="3"></circle>
+                <text class="point-label" x="${pos.x + 11}" y="${pos.y - 11}">${escapeHtml(label)}</text>
+              </g>
+            `;
+          })
+          .join("");
+
+        plot.innerHTML = `
+          <rect x="0" y="0" width="640" height="640" fill="transparent"></rect>
+          <g>${grid.join("")}</g>
+          <line class="axis-line" x1="62" y1="${axisY}" x2="578" y2="${axisY}"></line>
+          <line class="axis-line" x1="${axisX}" y1="62" x2="${axisX}" y2="578"></line>
+          <text class="tick-label" x="586" y="${axisY - 8}">x</text>
+          <text class="tick-label" x="${axisX + 8}" y="54">y</text>
+          <g>${points}</g>
+        `;
+
+        plot.classList.toggle("dragging", state.draggingId !== null);
+      }
+
+      function syncEmbeddingCells(id) {
+        const row = getRowById(id);
+        if (!row) {
+          return;
+        }
+
+        const tr = embeddingBody.querySelector(`tr[data-id="${id}"]`);
+        if (!tr) {
+          return;
+        }
+
+        const xCell = tr.querySelector('[data-field="x"]');
+        const yCell = tr.querySelector('[data-field="y"]');
+        if (xCell) xCell.textContent = formatNumber(row.x);
+        if (yCell) yCell.textContent = formatNumber(row.y);
+      }
+
+      function renderAll() {
+        renderEmbeddingTable();
+        renderSentenceTokenizer();
+        renderPlot();
+        refreshActiveRows();
+      }
+
+      embeddingBody.addEventListener("input", (event) => {
+        const tr = event.target.closest("tr[data-id]");
+        if (!tr) {
+          return;
+        }
+
+        const row = getRowById(Number(tr.dataset.id));
+        if (!row) {
+          return;
+        }
+
+        if (event.target.name === "token") {
+          row.token = event.target.value;
+        } else {
+          const field = event.target.dataset.field;
+          if (field === "x" || field === "y") {
+          const text = event.target.textContent.trim();
+          row[field] = text === "" ? NaN : Number(text);
+          }
+        }
+
+        renderPlot();
+        refreshActiveRows();
+        renderSentenceTokenizer();
+      });
+
+      embeddingBody.addEventListener("focusout", (event) => {
+        const tr = event.target.closest("tr[data-id]");
+        if (!tr) {
+          return;
+        }
+
+        const row = getRowById(Number(tr.dataset.id));
+        if (!row) {
+          return;
+        }
+
+        syncEmbeddingCells(row.id);
+      });
+
+      embeddingBody.addEventListener("click", (event) => {
+        const tr = event.target.closest("tr[data-id]");
+        if (!tr) {
+          return;
+        }
+
+        const row = getRowById(Number(tr.dataset.id));
+        if (row) {
+          state.activeTokenId = Number.isInteger(row.tokenId) ? row.tokenId : null;
+          renderPlot();
+          refreshActiveRows();
+        }
+      });
+
+      plot.addEventListener("pointerdown", (event) => {
+        const point = event.target.closest(".point");
+        if (!point) {
+          return;
+        }
+
+        const id = Number(point.dataset.id);
+        state.draggingId = id;
+        state.dragBounds = state.plotBounds;
+        state.activeTokenId = point.dataset.tokenId === "" ? null : Number(point.dataset.tokenId);
+        plot.setPointerCapture(event.pointerId);
+        renderPlot();
+        refreshActiveRows();
+      });
+
+      plot.addEventListener("pointermove", (event) => {
+        if (state.draggingId === null) {
+          return;
+        }
+
+        const embedding = getRowById(state.draggingId);
+        if (!embedding) {
+          return;
+        }
+
+        const coords = screenToWorld(event.clientX, event.clientY);
+        embedding.x = Number(coords.x.toFixed(2));
+        embedding.y = Number(coords.y.toFixed(2));
+        syncEmbeddingCells(embedding.id);
+        renderPlot();
+      });
+
+      function stopDragging(event) {
+        if (state.draggingId === null) {
+          return;
+        }
+
+        if (event && plot.hasPointerCapture(event.pointerId)) {
+          plot.releasePointerCapture(event.pointerId);
+        }
+        state.draggingId = null;
+        state.dragBounds = null;
+        renderPlot();
+      }
+
+      plot.addEventListener("pointerup", stopDragging);
+      plot.addEventListener("pointercancel", stopDragging);
+      plot.addEventListener("click", (event) => {
+        const point = event.target.closest(".point");
+        if (!point) {
+          return;
+        }
+
+        state.activeTokenId = point.dataset.tokenId === "" ? null : Number(point.dataset.tokenId);
+        renderPlot();
+        refreshActiveRows();
+      });
+
+      sentenceInput.addEventListener("input", renderSentenceTokenizer);
+
+      renderAll();
+    </script>
+  </body>
+</html>

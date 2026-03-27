@@ -1,0 +1,1186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Self-Attention Demo</title>
+    <style>
+      :root {
+        --bg: #f4efe8;
+        --panel: rgba(255, 251, 245, 0.94);
+        --ink: #18262d;
+        --muted: #5c6a71;
+        --line: rgba(24, 38, 45, 0.12);
+        --accent: #0f6bcf;
+        --accent-soft: rgba(15, 107, 207, 0.12);
+        --accent-strong: #0a4b94;
+        --warm: #d66a36;
+        --warm-soft: rgba(214, 106, 54, 0.12);
+        --mint: #14846d;
+        --shadow: 0 22px 56px rgba(54, 39, 16, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.78), transparent 30%),
+          radial-gradient(circle at bottom right, rgba(240, 209, 161, 0.38), transparent 30%),
+          linear-gradient(160deg, var(--bg) 0%, #efe8d9 56%, #e8dec9 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.24;
+        background-image:
+          linear-gradient(rgba(26, 42, 50, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(26, 42, 50, 0.05) 1px, transparent 1px);
+        background-size: 28px 28px;
+        mask-image: radial-gradient(circle at center, black 36%, transparent 86%);
+      }
+
+      .page {
+        width: min(1280px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 28px 0 40px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 11ch;
+        font-size: clamp(2.1rem, 4.4vw, 4.1rem);
+        line-height: 0.92;
+        letter-spacing: -0.045em;
+      }
+
+      .subtitle {
+        max-width: 72ch;
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 1.02rem;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 13px;
+        border-radius: 999px;
+        background: rgba(255, 250, 242, 0.9);
+        border: 1px solid rgba(24, 38, 45, 0.08);
+        box-shadow: 0 8px 20px rgba(66, 49, 22, 0.08);
+        font-size: 0.93rem;
+      }
+
+      .chip strong {
+        font-weight: 700;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.28fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid rgba(24, 38, 45, 0.08);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      .card,
+      .tables-card {
+        padding: 18px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 18px;
+      }
+
+      .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .card-head h2,
+      .tables-card h2 {
+        margin: 0;
+        font-size: 1.08rem;
+        letter-spacing: -0.02em;
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .sentence-input {
+        width: 100%;
+        border: 1px solid rgba(24, 38, 45, 0.12);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.94);
+        color: var(--ink);
+        padding: 14px 16px;
+        font: inherit;
+        font-size: 1rem;
+      }
+
+      .sentence-input:focus {
+        outline: 2px solid rgba(15, 107, 207, 0.15);
+        border-color: rgba(15, 107, 207, 0.3);
+      }
+
+      .sequence-block {
+        display: grid;
+        gap: 8px;
+      }
+
+      .sequence-label {
+        font-size: 0.86rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .sequence-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-height: 42px;
+        padding: 10px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.66);
+      }
+
+      .sequence-chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-weight: 700;
+        font-size: 0.92rem;
+      }
+
+      .sequence-chip.id-chip {
+        background: rgba(24, 38, 45, 0.08);
+        color: var(--ink);
+        font-family: ui-monospace, "SF Mono", Monaco, Consolas, monospace;
+      }
+
+      .sequence-chip.unknown {
+        background: var(--warm-soft);
+        color: #9a4c22;
+      }
+
+      .sequence-empty {
+        color: var(--muted);
+        font-size: 0.94rem;
+        align-self: center;
+      }
+
+      .matrix-wrap {
+        position: relative;
+        padding: 12px 18px 12px 10px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.66);
+      }
+
+      .matrix-wrap::before,
+      .matrix-wrap::after {
+        content: "";
+        position: absolute;
+        top: 16px;
+        bottom: 16px;
+        width: 12px;
+        border-top: 3px solid rgba(24, 38, 45, 0.6);
+        border-bottom: 3px solid rgba(24, 38, 45, 0.6);
+      }
+
+      .matrix-wrap::before {
+        left: 164px;
+        border-left: 3px solid rgba(24, 38, 45, 0.6);
+      }
+
+      .matrix-wrap::after {
+        right: 10px;
+        border-right: 3px solid rgba(24, 38, 45, 0.6);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 10px 10px;
+        text-align: left;
+        border-bottom: 1px solid rgba(24, 38, 45, 0.08);
+        vertical-align: middle;
+      }
+
+      tbody tr {
+        transition: background 120ms ease;
+      }
+
+      tbody tr.active {
+        background: rgba(15, 107, 207, 0.08);
+      }
+
+      tbody tr:hover {
+        background: rgba(15, 107, 207, 0.05);
+      }
+
+      .matrix-table {
+        table-layout: fixed;
+      }
+
+      .matrix-table th,
+      .matrix-table td {
+        border-bottom: 0;
+        padding: 8px 12px;
+      }
+
+      .matrix-token {
+        width: 90px;
+        text-align: left;
+        padding-right: 14px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      .matrix-index {
+        width: 64px;
+        text-align: right;
+        padding-right: 18px;
+        color: var(--muted);
+        font-family: ui-monospace, "SF Mono", Monaco, Consolas, monospace;
+        font-size: 0.95rem;
+      }
+
+      .matrix-value {
+        text-align: center;
+      }
+
+      .matrix-input {
+        width: 100%;
+        border: 1px solid rgba(24, 38, 45, 0.12);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--ink);
+        padding: 8px 10px;
+        font: inherit;
+        font-size: 0.96rem;
+      }
+
+      .matrix-input:focus {
+        outline: 2px solid rgba(15, 107, 207, 0.15);
+        border-color: rgba(15, 107, 207, 0.3);
+      }
+
+      .matrix-readout {
+        display: inline-flex;
+        justify-content: center;
+        min-width: 84px;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(24, 38, 45, 0.08);
+        font-family: ui-monospace, "SF Mono", Monaco, Consolas, monospace;
+        font-size: 0.96rem;
+      }
+
+      .embedding-plot-wrap {
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.66);
+        overflow: hidden;
+      }
+
+      .embedding-plot {
+        display: block;
+        width: 100%;
+        height: auto;
+        touch-action: none;
+        cursor: grab;
+      }
+
+      .embedding-plot.dragging {
+        cursor: grabbing;
+      }
+
+      .plot-grid {
+        stroke: rgba(24, 38, 45, 0.08);
+        stroke-width: 1;
+      }
+
+      .plot-axis {
+        stroke: rgba(24, 38, 45, 0.28);
+        stroke-width: 1.4;
+      }
+
+      .plot-axis-label {
+        fill: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .plot-point {
+        fill: var(--accent);
+        stroke: rgba(255, 255, 255, 0.96);
+        stroke-width: 2.5;
+        cursor: grab;
+      }
+
+      .plot-point.active {
+        fill: var(--warm);
+      }
+
+      .plot-hit {
+        fill: transparent;
+        cursor: grab;
+      }
+
+      .plot-hit.active {
+        cursor: grabbing;
+      }
+
+      .plot-label {
+        fill: var(--ink);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .plot-coord {
+        fill: var(--muted);
+        font-size: 11px;
+        font-family: ui-monospace, "SF Mono", Monaco, Consolas, monospace;
+        pointer-events: none;
+      }
+
+      .plot-empty {
+        fill: var(--muted);
+        font-size: 15px;
+      }
+
+      .tables-card {
+        display: grid;
+        gap: 18px;
+      }
+
+      .table-block {
+        display: grid;
+        gap: 10px;
+      }
+
+      .table-copy {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+        font-size: 0.94rem;
+      }
+
+      .score-wrap {
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.66);
+      }
+
+      .score-table {
+        min-width: 100%;
+      }
+
+      .score-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: rgba(247, 243, 235, 0.96);
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+
+      .score-header {
+        min-width: 92px;
+        text-align: center;
+      }
+
+      .score-rowhead {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background: rgba(247, 243, 235, 0.96);
+        min-width: 92px;
+        font-weight: 700;
+      }
+
+      .score-cell {
+        min-width: 76px;
+        text-align: center;
+        font-family: ui-monospace, "SF Mono", Monaco, Consolas, monospace;
+        font-size: 0.92rem;
+      }
+
+      .score-cell.masked {
+        color: rgba(24, 38, 45, 0.32);
+        background:
+          repeating-linear-gradient(
+            -45deg,
+            rgba(24, 38, 45, 0.05),
+            rgba(24, 38, 45, 0.05) 7px,
+            rgba(255, 255, 255, 0.72) 7px,
+            rgba(255, 255, 255, 0.72) 14px
+          );
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .legend-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 11px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.74);
+        border: 1px solid var(--line);
+        font-size: 0.9rem;
+      }
+
+      .swatch {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+      }
+
+      @media (max-width: 1040px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        h1 {
+          max-width: none;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page {
+          width: min(100vw - 20px, 1280px);
+          padding-top: 20px;
+        }
+
+        .card,
+        .tables-card {
+          padding: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <h1>Watching self-attention build a table of scores</h1>
+        <p class="subtitle">
+          Type a short sentence, inspect the token sequence, and edit the sequence embeddings directly. The page
+          computes causal pairwise dot products, masks out future positions, and then shows the row-wise softmax
+          normalization that turns scores into attention weights before applying those weights to a value matrix.
+        </p>
+        <div class="chips">
+          <div class="chip"><strong>Input</strong> sentence to token sequence</div>
+          <div class="chip"><strong>Embeddings</strong> editable T x 2 matrix</div>
+          <div class="chip"><strong>Values</strong> editable V matrix</div>
+          <div class="chip"><strong>Geometry</strong> draggable points in 2D</div>
+          <div class="chip"><strong>Attention</strong> causal mask plus row-wise softmax</div>
+        </div>
+      </section>
+
+      <section class="shell">
+        <div class="stack">
+          <section class="panel card">
+            <div class="card-head">
+              <div>
+                <h2>Sequence Plot</h2>
+                <p class="eyebrow">Use a short input such as "the cat sees the dog".</p>
+              </div>
+            </div>
+            <input
+              id="sentence-input"
+              class="sentence-input"
+              type="text"
+              value="the cat sees the dog"
+              placeholder="type a sentence"
+            />
+            <div class="sequence-block">
+              <div class="sequence-label">Token Sequence</div>
+              <div class="sequence-row" id="sequence-display"></div>
+            </div>
+            <div class="sequence-block">
+              <div class="sequence-label">Token IDs</div>
+              <div class="sequence-row" id="id-display"></div>
+            </div>
+            <div class="embedding-plot-wrap">
+              <svg id="embedding-plot" class="embedding-plot" viewBox="0 0 520 360" aria-label="sequence embeddings"></svg>
+            </div>
+          </section>
+
+          <section class="panel card">
+            <div class="card-head">
+              <div>
+                <h2>Sequence Embeddings</h2>
+                <p class="eyebrow">Each token position gets a 2D vector. Editing these values recomputes attention and moves the plot.</p>
+              </div>
+            </div>
+            <div class="matrix-wrap">
+              <table class="matrix-table">
+                <tbody id="embedding-body"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel card">
+            <div class="card-head">
+              <div>
+                <h2>Value Matrix</h2>
+                <p class="eyebrow">These are the per-token value vectors <code>V</code> that attention will mix together.</p>
+              </div>
+            </div>
+            <div class="matrix-wrap">
+              <table class="matrix-table">
+                <tbody id="value-body"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <section class="panel tables-card">
+          <div class="legend">
+            <div class="legend-pill">
+              <span class="swatch" style="background: var(--accent)"></span>
+              Raw dot products
+            </div>
+            <div class="legend-pill">
+              <span class="swatch" style="background: var(--mint)"></span>
+              Row-wise softmax
+            </div>
+            <div class="legend-pill">
+              <span class="swatch" style="background: var(--warm)"></span>
+              Active token row
+            </div>
+          </div>
+
+          <section class="table-block">
+            <div class="card-head">
+              <div>
+                <h2>Dot Products</h2>
+                <p class="eyebrow">Entry <code>(i, j)</code> is visible only when token <code>i</code> may attend to token <code>j</code>.</p>
+              </div>
+            </div>
+            <p class="table-copy">Raw similarity scores with a causal mask, so future tokens are blocked.</p>
+            <div class="score-wrap">
+              <table class="score-table" id="dot-table"></table>
+            </div>
+          </section>
+
+          <section class="table-block">
+            <div class="card-head">
+              <div>
+                <h2>Row-Wise Normalization</h2>
+                <p class="eyebrow">Each row is softmax-normalized only over the unmasked entries, so every row still sums to 1.</p>
+              </div>
+            </div>
+            <p class="table-copy">This is the causal self-attention table produced from the masked dot products.</p>
+            <div class="score-wrap">
+              <table class="score-table" id="softmax-table"></table>
+            </div>
+          </section>
+
+          <section class="table-block">
+            <div class="card-head">
+              <div>
+                <h2>A · V</h2>
+                <p class="eyebrow">The normalized attention matrix multiplies the value matrix to produce one output vector per token.</p>
+              </div>
+            </div>
+            <p class="table-copy">Each row is the weighted average of the earlier value vectors allowed by the causal mask.</p>
+            <div class="matrix-wrap">
+              <table class="matrix-table">
+                <tbody id="output-body"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const sentenceInput = document.getElementById("sentence-input");
+      const sequenceDisplay = document.getElementById("sequence-display");
+      const idDisplay = document.getElementById("id-display");
+      const embeddingPlot = document.getElementById("embedding-plot");
+      const embeddingBody = document.getElementById("embedding-body");
+      const valueBody = document.getElementById("value-body");
+      const dotTable = document.getElementById("dot-table");
+      const softmaxTable = document.getElementById("softmax-table");
+      const outputBody = document.getElementById("output-body");
+      const plotView = { width: 520, height: 360, padX: 58, padY: 38 };
+
+      const vocab = new Map([
+        ["the", { tokenId: 10, base: [-1.8, -1.0] }],
+        ["a", { tokenId: 11, base: [-1.35, -0.85] }],
+        ["cat", { tokenId: 101, base: [-1.25, 1.1] }],
+        ["dog", { tokenId: 102, base: [-0.2, 1.45] }],
+        ["sees", { tokenId: 150, base: [0.75, 0.95] }],
+        ["likes", { tokenId: 151, base: [1.2, 0.35] }],
+        ["runs", { tokenId: 152, base: [1.55, 1.35] }],
+        ["eats", { tokenId: 153, base: [0.95, -0.15] }],
+        ["car", { tokenId: 201, base: [1.75, -0.9] }],
+        ["vehicle", { tokenId: 202, base: [2.25, -1.35] }],
+      ]);
+
+      const state = {
+        activeIndex: 0,
+        sequence: [],
+        draggingIndex: null,
+        dragBounds: null,
+      };
+
+      function formatNumber(value, digits = 2) {
+        return Number.isFinite(value) ? value.toFixed(digits) : "";
+      }
+
+      function hashToken(token) {
+        let hash = 0;
+        for (let i = 0; i < token.length; i += 1) {
+          hash = (hash * 31 + token.charCodeAt(i)) >>> 0;
+        }
+        return hash;
+      }
+
+      function fallbackEmbedding(token) {
+        const hash = hashToken(token);
+        const x = (((hash % 200) / 100) - 1) * 1.7;
+        const y = ((((Math.floor(hash / 200) % 200) / 100) - 1)) * 1.7;
+        return [Number(x.toFixed(2)), Number(y.toFixed(2))];
+      }
+
+      function defaultValue(base, index) {
+        const vx = base[1] * 0.9 + 0.2 + (index % 2 === 0 ? 0.12 : -0.12);
+        const vy = -base[0] * 0.65 + 0.15;
+        return [Number(vx.toFixed(2)), Number(vy.toFixed(2))];
+      }
+
+      function tokenize(text) {
+        const parts = String(text).toLowerCase().match(/[a-z0-9']+/g) || [];
+        return parts.map((token, index) => {
+          const entry = vocab.get(token);
+          const base = entry ? entry.base : fallbackEmbedding(token);
+          const value = defaultValue(base, index);
+          return {
+            id: index + 1,
+            index,
+            token,
+            tokenId: entry ? entry.tokenId : null,
+            x: base[0],
+            y: base[1],
+            vx: value[0],
+            vy: value[1],
+            known: Boolean(entry),
+          };
+        });
+      }
+
+      function preserveEmbeddings(nextSequence) {
+        const byKey = new Map(state.sequence.map((row) => [`${row.index}:${row.token}`, row]));
+        return nextSequence.map((row) => {
+          const prev = byKey.get(`${row.index}:${row.token}`);
+          return prev ? { ...row, x: prev.x, y: prev.y, vx: prev.vx, vy: prev.vy } : row;
+        });
+      }
+
+      function softmaxRow(values) {
+        if (values.length === 0) {
+          return [];
+        }
+        const valid = values.filter((value) => Number.isFinite(value));
+        if (valid.length === 0) {
+          return values.map(() => null);
+        }
+        const max = Math.max(...valid);
+        const exps = values.map((value) => (Number.isFinite(value) ? Math.exp(value - max) : null));
+        const sum = exps.reduce((acc, value) => acc + (value ?? 0), 0);
+        return exps.map((value) => (value === null ? null : value / sum));
+      }
+
+      function computeDotProducts(sequence) {
+        return sequence.map((left) =>
+          sequence.map((right) => left.x * right.x + left.y * right.y),
+        );
+      }
+
+      function applyCausalMask(matrix) {
+        return matrix.map((row, rowIndex) =>
+          row.map((value, colIndex) => (colIndex <= rowIndex ? value : null)),
+        );
+      }
+
+      function renderSequence() {
+        if (state.sequence.length === 0) {
+          sequenceDisplay.innerHTML = '<span class="sequence-empty">Type above to create a token sequence.</span>';
+          idDisplay.innerHTML = '<span class="sequence-empty">Token IDs will appear here.</span>';
+          return;
+        }
+
+        sequenceDisplay.innerHTML = state.sequence
+          .map((row) => {
+            const className = row.known ? "sequence-chip" : "sequence-chip unknown";
+            return `<span class="${className}">${row.token}</span>`;
+          })
+          .join("");
+
+        idDisplay.innerHTML = state.sequence
+          .map((row) => {
+            const className = row.known ? "sequence-chip id-chip" : "sequence-chip id-chip unknown";
+            const label = row.tokenId === null ? "?" : String(row.tokenId);
+            return `<span class="${className}">${label}</span>`;
+          })
+          .join("");
+      }
+
+      function getPlotBounds() {
+        const finite = state.sequence.filter((row) => Number.isFinite(row.x) && Number.isFinite(row.y));
+        if (finite.length === 0) {
+          return { minX: -2, maxX: 2, minY: -2, maxY: 2 };
+        }
+
+        let minX = Math.min(...finite.map((row) => row.x));
+        let maxX = Math.max(...finite.map((row) => row.x));
+        let minY = Math.min(...finite.map((row) => row.y));
+        let maxY = Math.max(...finite.map((row) => row.y));
+
+        minX = Math.min(minX, 0);
+        maxX = Math.max(maxX, 0);
+        minY = Math.min(minY, 0);
+        maxY = Math.max(maxY, 0);
+
+        if (minX === maxX) {
+          minX -= 1;
+          maxX += 1;
+        }
+        if (minY === maxY) {
+          minY -= 1;
+          maxY += 1;
+        }
+
+        const xPad = Math.max(0.8, (maxX - minX) * 0.18);
+        const yPad = Math.max(0.8, (maxY - minY) * 0.18);
+        return {
+          minX: minX - xPad,
+          maxX: maxX + xPad,
+          minY: minY - yPad,
+          maxY: maxY + yPad,
+        };
+      }
+
+      function toPlotX(x, bounds) {
+        const span = bounds.maxX - bounds.minX;
+        return plotView.padX + ((x - bounds.minX) / span) * (plotView.width - plotView.padX * 2);
+      }
+
+      function toPlotY(y, bounds) {
+        const span = bounds.maxY - bounds.minY;
+        return plotView.height - plotView.padY - ((y - bounds.minY) / span) * (plotView.height - plotView.padY * 2);
+      }
+
+      function fromPlotX(px, bounds) {
+        const usable = plotView.width - plotView.padX * 2;
+        const t = (px - plotView.padX) / usable;
+        return bounds.minX + t * (bounds.maxX - bounds.minX);
+      }
+
+      function fromPlotY(py, bounds) {
+        const usable = plotView.height - plotView.padY * 2;
+        const t = (plotView.height - plotView.padY - py) / usable;
+        return bounds.minY + t * (bounds.maxY - bounds.minY);
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function renderVectorMatrix(target, keyX, keyY, editable) {
+        if (state.sequence.length === 0) {
+          target.innerHTML = "";
+          return;
+        }
+
+        target.innerHTML = state.sequence
+          .map((row) => {
+            const active = row.index === state.activeIndex ? "active" : "";
+            const tokenId = row.tokenId === null ? "?" : String(row.tokenId);
+            const xCell = editable
+              ? `<input class="matrix-input" type="number" step="0.01" data-field="${keyX}" value="${formatNumber(row[keyX])}" />`
+              : `<span class="matrix-readout">${formatNumber(row[keyX])}</span>`;
+            const yCell = editable
+              ? `<input class="matrix-input" type="number" step="0.01" data-field="${keyY}" value="${formatNumber(row[keyY])}" />`
+              : `<span class="matrix-readout">${formatNumber(row[keyY])}</span>`;
+            return `
+              <tr data-index="${row.index}" class="${active}">
+                <td class="matrix-token">${row.token}</td>
+                <th scope="row" class="matrix-index">${tokenId}</th>
+                <td class="matrix-value">${xCell}</td>
+                <td class="matrix-value">${yCell}</td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function renderEmbeddingMatrix() {
+        renderVectorMatrix(embeddingBody, "x", "y", true);
+      }
+
+      function renderValueMatrix() {
+        renderVectorMatrix(valueBody, "vx", "vy", true);
+      }
+
+      function renderEmbeddingPlot() {
+        if (state.sequence.length === 0) {
+          embeddingPlot.innerHTML = `<text class="plot-empty" x="${plotView.width / 2}" y="${plotView.height / 2}" text-anchor="middle">Type above to create a sequence.</text>`;
+          return;
+        }
+
+        const bounds = getPlotBounds();
+        const verticals = Array.from({ length: 5 }, (_, i) => {
+          const x = plotView.padX + (i / 4) * (plotView.width - plotView.padX * 2);
+          return `<line class="plot-grid" x1="${x}" y1="${plotView.padY}" x2="${x}" y2="${plotView.height - plotView.padY}" />`;
+        }).join("");
+        const horizontals = Array.from({ length: 5 }, (_, i) => {
+          const y = plotView.padY + (i / 4) * (plotView.height - plotView.padY * 2);
+          return `<line class="plot-grid" x1="${plotView.padX}" y1="${y}" x2="${plotView.width - plotView.padX}" y2="${y}" />`;
+        }).join("");
+
+        const axisX = toPlotY(0, bounds);
+        const axisY = toPlotX(0, bounds);
+        const points = state.sequence
+          .map((row) => {
+            const cx = toPlotX(row.x, bounds);
+            const cy = toPlotY(row.y, bounds);
+            const active = row.index === state.activeIndex ? "active" : "";
+            return `
+              <g class="plot-token" data-index="${row.index}">
+                <circle class="plot-hit ${state.draggingIndex === row.index ? "active" : ""}" cx="${cx}" cy="${cy}" r="18" data-index="${row.index}" />
+                <circle class="plot-point ${active}" cx="${cx}" cy="${cy}" r="8" data-index="${row.index}" />
+                <text class="plot-label" x="${cx + 12}" y="${cy - 10}" data-index="${row.index}">${row.token}</text>
+                <text class="plot-coord" x="${cx + 12}" y="${cy + 8}" data-index="${row.index}">(${formatNumber(row.x)}, ${formatNumber(row.y)})</text>
+              </g>
+            `;
+          })
+          .join("");
+
+        embeddingPlot.innerHTML = `
+          ${verticals}
+          ${horizontals}
+          <line class="plot-axis" x1="${plotView.padX}" y1="${axisX}" x2="${plotView.width - plotView.padX}" y2="${axisX}" />
+          <line class="plot-axis" x1="${axisY}" y1="${plotView.padY}" x2="${axisY}" y2="${plotView.height - plotView.padY}" />
+          <text class="plot-axis-label" x="${plotView.width - plotView.padX + 6}" y="${axisX - 8}">x</text>
+          <text class="plot-axis-label" x="${axisY + 8}" y="${plotView.padY - 8}">y</text>
+          ${points}
+        `;
+      }
+
+      function heatColor(value, maxAbs) {
+        if (!Number.isFinite(value) || maxAbs <= 0) {
+          return "rgba(24, 38, 45, 0.03)";
+        }
+        const intensity = Math.min(1, Math.abs(value) / maxAbs);
+        if (value >= 0) {
+          return `rgba(15, 107, 207, ${0.08 + intensity * 0.26})`;
+        }
+        return `rgba(214, 106, 54, ${0.08 + intensity * 0.26})`;
+      }
+
+      function softmaxColor(value) {
+        const intensity = Math.min(1, Math.max(0, value));
+        return `rgba(20, 132, 109, ${0.08 + intensity * 0.3})`;
+      }
+
+      function renderScoreTable(target, matrix, formatter, colorFn) {
+        if (state.sequence.length === 0) {
+          target.innerHTML = "";
+          return;
+        }
+
+        const headers = state.sequence
+          .map((row) => `<th class="score-header">${row.token}</th>`)
+          .join("");
+
+        const flat = matrix.flat().filter((value) => Number.isFinite(value)).map((value) => Math.abs(value));
+        const maxAbs = flat.length > 0 ? Math.max(...flat) : 1;
+
+        const rows = matrix
+          .map((values, rowIndex) => {
+            const token = state.sequence[rowIndex].token;
+            const cells = values
+              .map((value) => {
+                if (!Number.isFinite(value)) {
+                  return '<td class="score-cell masked">--</td>';
+                }
+                const background = colorFn(value, maxAbs);
+                return `<td class="score-cell" style="background:${background}">${formatter(value)}</td>`;
+              })
+              .join("");
+            return `<tr><th class="score-rowhead">${token}</th>${cells}</tr>`;
+          })
+          .join("");
+
+        target.innerHTML = `
+          <thead>
+            <tr>
+              <th class="score-rowhead"></th>
+              ${headers}
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        `;
+      }
+
+      function computeAttentionState() {
+        const dots = applyCausalMask(computeDotProducts(state.sequence));
+        const normalized = dots.map((row) => softmaxRow(row));
+        return { dots, normalized };
+      }
+
+      function renderAttentionTables(attentionState) {
+        const { dots, normalized } = attentionState ?? computeAttentionState();
+
+        renderScoreTable(dotTable, dots, (value) => formatNumber(value), heatColor);
+        renderScoreTable(softmaxTable, normalized, (value) => formatNumber(value, 3), softmaxColor);
+      }
+
+      function multiplyAttentionWithValues(attention, sequence) {
+        return attention.map((row) => {
+          let outX = 0;
+          let outY = 0;
+          row.forEach((weight, index) => {
+            if (!Number.isFinite(weight)) {
+              return;
+            }
+            outX += weight * sequence[index].vx;
+            outY += weight * sequence[index].vy;
+          });
+          return { x: outX, y: outY };
+        });
+      }
+
+      function renderOutputMatrix(attentionState) {
+        if (state.sequence.length === 0) {
+          outputBody.innerHTML = "";
+          return;
+        }
+
+        const { normalized } = attentionState ?? computeAttentionState();
+        const outputs = multiplyAttentionWithValues(normalized, state.sequence);
+
+        outputBody.innerHTML = outputs
+          .map((row, index) => {
+            const token = state.sequence[index];
+            const active = index === state.activeIndex ? "active" : "";
+            const tokenId = token.tokenId === null ? "?" : String(token.tokenId);
+            return `
+              <tr data-index="${index}" class="${active}">
+                <td class="matrix-token">${token.token}</td>
+                <th scope="row" class="matrix-index">${tokenId}</th>
+                <td class="matrix-value"><span class="matrix-readout">${formatNumber(row.x)}</span></td>
+                <td class="matrix-value"><span class="matrix-readout">${formatNumber(row.y)}</span></td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function rerenderAll() {
+        const attentionState = computeAttentionState();
+        renderSequence();
+        renderEmbeddingMatrix();
+        renderValueMatrix();
+        renderEmbeddingPlot();
+        renderAttentionTables(attentionState);
+        renderOutputMatrix(attentionState);
+      }
+
+      function rebuildFromSentence() {
+        state.sequence = preserveEmbeddings(tokenize(sentenceInput.value));
+        state.activeIndex = Math.min(state.activeIndex, Math.max(0, state.sequence.length - 1));
+        rerenderAll();
+      }
+
+      sentenceInput.addEventListener("input", rebuildFromSentence);
+
+      embeddingBody.addEventListener("input", (event) => {
+        const tr = event.target.closest("tr[data-index]");
+        if (!tr) {
+          return;
+        }
+
+        const row = state.sequence[Number(tr.dataset.index)];
+        if (!row) {
+          return;
+        }
+
+        const field = event.target.dataset.field;
+        if (field === "x" || field === "y") {
+          row[field] = event.target.value === "" ? NaN : Number(event.target.value);
+          renderEmbeddingPlot();
+          const attentionState = computeAttentionState();
+          renderAttentionTables(attentionState);
+          renderOutputMatrix(attentionState);
+        }
+      });
+
+      function handleMatrixClick(event) {
+        const tr = event.target.closest("tr[data-index]");
+        if (!tr) {
+          return;
+        }
+        state.activeIndex = Number(tr.dataset.index);
+        renderEmbeddingMatrix();
+        renderValueMatrix();
+        renderOutputMatrix();
+        renderEmbeddingPlot();
+      }
+
+      embeddingBody.addEventListener("click", handleMatrixClick);
+
+      valueBody.addEventListener("input", (event) => {
+        const tr = event.target.closest("tr[data-index]");
+        if (!tr) {
+          return;
+        }
+
+        const row = state.sequence[Number(tr.dataset.index)];
+        if (!row) {
+          return;
+        }
+
+        const field = event.target.dataset.field;
+        if (field === "vx" || field === "vy") {
+          row[field] = event.target.value === "" ? NaN : Number(event.target.value);
+          renderOutputMatrix();
+        }
+      });
+
+      valueBody.addEventListener("click", handleMatrixClick);
+
+      embeddingPlot.addEventListener("pointerdown", (event) => {
+        const target = event.target.closest("[data-index]");
+        if (!target) {
+          return;
+        }
+
+        const index = Number(target.dataset.index);
+        if (!Number.isInteger(index) || !state.sequence[index]) {
+          return;
+        }
+
+        state.activeIndex = index;
+        state.draggingIndex = index;
+        state.dragBounds = getPlotBounds();
+        embeddingPlot.classList.add("dragging");
+        embeddingPlot.setPointerCapture(event.pointerId);
+        renderEmbeddingMatrix();
+        renderEmbeddingPlot();
+      });
+
+      embeddingPlot.addEventListener("pointermove", (event) => {
+        if (state.draggingIndex === null) {
+          return;
+        }
+
+        const row = state.sequence[state.draggingIndex];
+        if (!row) {
+          return;
+        }
+
+        const bounds = state.dragBounds ?? getPlotBounds();
+        const rect = embeddingPlot.getBoundingClientRect();
+        const px = ((event.clientX - rect.left) / rect.width) * plotView.width;
+        const py = ((event.clientY - rect.top) / rect.height) * plotView.height;
+
+        row.x = Number(formatNumber(fromPlotX(clamp(px, plotView.padX, plotView.width - plotView.padX), bounds)));
+        row.y = Number(formatNumber(fromPlotY(clamp(py, plotView.padY, plotView.height - plotView.padY), bounds)));
+        renderEmbeddingMatrix();
+        renderEmbeddingPlot();
+        const attentionState = computeAttentionState();
+        renderAttentionTables(attentionState);
+        renderOutputMatrix(attentionState);
+      });
+
+      function stopDragging(pointerId) {
+        state.draggingIndex = null;
+        state.dragBounds = null;
+        embeddingPlot.classList.remove("dragging");
+        if (pointerId !== undefined && embeddingPlot.hasPointerCapture(pointerId)) {
+          embeddingPlot.releasePointerCapture(pointerId);
+        }
+        renderEmbeddingMatrix();
+        renderValueMatrix();
+        renderOutputMatrix();
+        renderEmbeddingPlot();
+      }
+
+      embeddingPlot.addEventListener("pointerup", (event) => {
+        stopDragging(event.pointerId);
+      });
+
+      embeddingPlot.addEventListener("pointercancel", (event) => {
+        stopDragging(event.pointerId);
+      });
+
+      rebuildFromSentence();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kernel Trick Lift Demo</title>
+    <style>
+      :root {
+        --bg: #f4efe4;
+        --panel: rgba(252, 248, 239, 0.9);
+        --panel-strong: rgba(255, 252, 245, 0.98);
+        --ink: #1e2b2a;
+        --muted: #5e6865;
+        --accent: #0a7f64;
+        --accent-soft: rgba(10, 127, 100, 0.14);
+        --red: #cc5a3b;
+        --red-soft: rgba(204, 90, 59, 0.18);
+        --blue: #2f6ea8;
+        --blue-soft: rgba(47, 110, 168, 0.16);
+        --grid: rgba(23, 43, 39, 0.12);
+        --wire: rgba(20, 70, 60, 0.28);
+        --plane: rgba(10, 127, 100, 0.16);
+        --shadow: 0 20px 60px rgba(55, 42, 18, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.55), transparent 34%),
+          radial-gradient(circle at bottom right, rgba(240, 219, 176, 0.42), transparent 28%),
+          linear-gradient(160deg, #f7f2e9 0%, #efe7d6 60%, #e8dec8 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.3;
+        background-image:
+          linear-gradient(rgba(20, 34, 29, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(20, 34, 29, 0.05) 1px, transparent 1px);
+        background-size: 28px 28px;
+        mask-image: radial-gradient(circle at center, black 34%, transparent 88%);
+      }
+
+      .page {
+        width: min(1180px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 32px 0 40px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3.8rem);
+        line-height: 0.94;
+        letter-spacing: -0.04em;
+        max-width: 10ch;
+      }
+
+      .subtitle {
+        max-width: 68ch;
+        font-size: 1.03rem;
+        line-height: 1.55;
+        color: var(--muted);
+        margin: 0;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        border-radius: 999px;
+        background: var(--panel);
+        border: 1px solid rgba(30, 43, 42, 0.08);
+        box-shadow: 0 8px 18px rgba(78, 62, 36, 0.06);
+        font-size: 0.93rem;
+      }
+
+      .chip strong {
+        font-weight: 700;
+      }
+
+      .demo-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .stage-card,
+      .info-card {
+        background: var(--panel-strong);
+        border: 1px solid rgba(30, 43, 42, 0.08);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(8px);
+      }
+
+      .stage-card {
+        padding: 16px 16px 18px;
+      }
+
+      .canvas-wrap {
+        position: relative;
+        border-radius: 22px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at top, rgba(255, 255, 255, 0.82), transparent 42%),
+          linear-gradient(180deg, #faf5eb 0%, #f3ead9 100%);
+        border: 1px solid rgba(32, 45, 40, 0.08);
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1.35 / 1;
+      }
+
+      .slider-panel {
+        padding: 14px 4px 0;
+      }
+
+      .slider-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: baseline;
+        margin-bottom: 8px;
+      }
+
+      .slider-head label {
+        font-size: 0.96rem;
+        font-weight: 700;
+      }
+
+      .phase {
+        color: var(--accent);
+        font-weight: 700;
+        letter-spacing: 0.01em;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        appearance: none;
+        height: 12px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(47, 110, 168, 0.16), rgba(10, 127, 100, 0.24));
+        outline: none;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 2px solid var(--accent);
+        box-shadow: 0 6px 16px rgba(10, 127, 100, 0.22);
+        cursor: pointer;
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 2px solid var(--accent);
+        box-shadow: 0 6px 16px rgba(10, 127, 100, 0.22);
+        cursor: pointer;
+      }
+
+      .slider-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .info-card {
+        padding: 20px 20px 22px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .callout {
+        padding: 16px;
+        border-radius: 20px;
+        background:
+          linear-gradient(160deg, rgba(10, 127, 100, 0.1), rgba(255, 255, 255, 0.72)),
+          var(--panel);
+        border: 1px solid rgba(10, 127, 100, 0.12);
+      }
+
+      .callout h2 {
+        margin: 0 0 8px;
+        font-size: 1.05rem;
+      }
+
+      .callout p,
+      .note p {
+        margin: 0;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+
+      .legend {
+        display: grid;
+        gap: 10px;
+      }
+
+      .legend-row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        font-size: 0.95rem;
+      }
+
+      .dot,
+      .swatch {
+        flex: 0 0 auto;
+      }
+
+      .dot {
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+      }
+
+      .swatch {
+        width: 26px;
+        height: 10px;
+        border-radius: 999px;
+      }
+
+      .formula {
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: rgba(30, 43, 42, 0.04);
+        border: 1px solid rgba(30, 43, 42, 0.06);
+        font-size: 0.98rem;
+      }
+
+      .formula code {
+        font-family: ui-monospace, "SF Mono", Monaco, Consolas, monospace;
+        font-size: 0.98em;
+      }
+
+      .note {
+        padding-top: 2px;
+        border-top: 1px solid rgba(30, 43, 42, 0.08);
+      }
+
+      @media (max-width: 920px) {
+        .demo-shell {
+          grid-template-columns: 1fr;
+        }
+
+        h1 {
+          max-width: none;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .page {
+          width: min(100vw - 20px, 1180px);
+          padding-top: 20px;
+        }
+
+        .stage-card,
+        .info-card {
+          border-radius: 22px;
+        }
+
+        .stage-card {
+          padding: 12px 12px 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <h1>Watching a nonlinear problem become linear</h1>
+        <p class="subtitle">
+          The red points sit inside a blue ring, so no straight line in the original plane can separate the classes.
+          Lift each point with a quadratic feature map, <code>z = x<sup>2</sup> + y<sup>2</sup></code>, and the same data
+          becomes separable by a flat plane in 3D.
+        </p>
+        <div class="chips">
+          <div class="chip"><strong>Data</strong> concentric classes</div>
+          <div class="chip"><strong>Lift</strong> quadratic feature map</div>
+          <div class="chip"><strong>Separator</strong> line in 2D, plane in 3D</div>
+        </div>
+      </section>
+
+      <section class="demo-shell">
+        <div class="stage-card">
+          <div class="canvas-wrap">
+            <canvas id="demo" aria-label="Kernel trick visualization"></canvas>
+          </div>
+          <div class="slider-panel">
+            <div class="slider-head">
+              <label for="lift-slider">View</label>
+              <div class="phase" id="phase-label">2D plane</div>
+            </div>
+            <input id="lift-slider" type="range" min="0" max="100" value="0" />
+            <div class="slider-labels">
+              <span>full 2d</span>
+              <span>full 3d</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="info-card">
+          <div class="callout">
+            <h2 id="story-title">No line works in the original plane</h2>
+            <p id="story-body">
+              The red class is surrounded by the blue class. Any straight separator leaves points from both classes mixed
+              on at least one side.
+            </p>
+          </div>
+
+          <div class="legend">
+            <div class="legend-row">
+              <span class="dot" style="background: var(--red)"></span>
+              <span>Inner class</span>
+            </div>
+            <div class="legend-row">
+              <span class="dot" style="background: var(--blue)"></span>
+              <span>Outer class</span>
+            </div>
+            <div class="legend-row">
+              <span class="swatch" style="background: var(--plane)"></span>
+              <span>Separating plane after lifting</span>
+            </div>
+          </div>
+
+          <div class="formula">
+            Feature map: <code>(x, y) -> (x, y, x<sup>2</sup> + y<sup>2</sup>)</code>
+          </div>
+
+          <div class="note">
+            <p>
+              At full 3D, the camera reaches a side view, so the lifted bowl reads as an upward-opening parabola. The
+              green separator becomes a horizontal cut through that surface, corresponding to a curved boundary back in
+              the original plane.
+            </p>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script>
+      const TAU = Math.PI * 2;
+      const SIDE_YAW = 0;
+      const SIDE_PITCH = Math.PI / 2;
+      const LIFT_SCALE = 0.72;
+      const RING_THRESHOLD = 1.22;
+      const SURFACE_RADIUS = 2.1;
+      const SURFACE_STEP = 0.35;
+      const AXIS_EXTENT = 2.45;
+      const Z_EXTENT = 2.8;
+
+      const canvas = document.getElementById("demo");
+      const ctx = canvas.getContext("2d");
+      const slider = document.getElementById("lift-slider");
+      const phaseLabel = document.getElementById("phase-label");
+      const storyTitle = document.getElementById("story-title");
+      const storyBody = document.getElementById("story-body");
+
+      const state = {
+        target: 0,
+        progress: 0,
+        spin: 0,
+        lastTime: 0,
+        width: 0,
+        height: 0,
+        dpr: Math.min(window.devicePixelRatio || 1, 2),
+      };
+
+      function smoothstep(a, b, x) {
+        const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+        return t * t * (3 - 2 * t);
+      }
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
+      function getViewAngles(progress) {
+        const cameraProgress = smoothstep(0, 1, progress);
+        const spinProgress = state.target === 1 ? smoothstep(0.985, 1, progress) : 0;
+        return {
+          yaw: lerp(0, SIDE_YAW, cameraProgress) + state.spin * spinProgress,
+          pitch: lerp(0, SIDE_PITCH, cameraProgress),
+        };
+      }
+
+      function quadRadius(rawRadius) {
+        return rawRadius * rawRadius * LIFT_SCALE;
+      }
+
+      function createPoints() {
+        const points = [];
+        const innerCount = 13;
+        const outerCount = 19;
+
+        for (let i = 0; i < innerCount; i += 1) {
+          const angle = (i / innerCount) * TAU + (i % 2) * 0.06;
+          const radius = 0.57 + 0.08 * Math.sin(i * 1.7) + 0.05 * Math.cos(i * 0.9);
+          points.push({
+            className: "inner",
+            x: radius * Math.cos(angle),
+            y: radius * Math.sin(angle),
+          });
+        }
+
+        for (let i = 0; i < outerCount; i += 1) {
+          const angle = (i / outerCount) * TAU + 0.12;
+          const radius = 1.48 + 0.12 * Math.sin(i * 1.2) + 0.06 * Math.cos(i * 0.5);
+          points.push({
+            className: "outer",
+            x: radius * Math.cos(angle),
+            y: radius * Math.sin(angle),
+          });
+        }
+
+        return points.map((point) => ({
+          ...point,
+          z: quadRadius(Math.hypot(point.x, point.y)),
+        }));
+      }
+
+      const points = createPoints();
+
+      function rotate(point, progress) {
+        const { yaw, pitch } = getViewAngles(progress);
+        const cosYaw = Math.cos(yaw);
+        const sinYaw = Math.sin(yaw);
+        const cosPitch = Math.cos(pitch);
+        const sinPitch = Math.sin(pitch);
+
+        const x1 = point.x * cosYaw - point.y * sinYaw;
+        const y1 = point.x * sinYaw + point.y * cosYaw;
+        const z1 = point.z;
+
+        return {
+          x: x1,
+          y: y1 * cosPitch - z1 * sinPitch,
+          z: y1 * sinPitch + z1 * cosPitch,
+        };
+      }
+
+      function buildViewport(progress) {
+        const samplePoints = [];
+        const surfaceLift = progress;
+
+        for (const x of [-AXIS_EXTENT, AXIS_EXTENT]) {
+          for (const y of [-AXIS_EXTENT, AXIS_EXTENT]) {
+            samplePoints.push({ x, y, z: quadRadius(SURFACE_RADIUS) * surfaceLift });
+            samplePoints.push({ x, y, z: 0 });
+          }
+        }
+
+        samplePoints.push({ x: AXIS_EXTENT, y: 0, z: 0 });
+        samplePoints.push({ x: 0, y: AXIS_EXTENT, z: 0 });
+        samplePoints.push({ x: 0, y: 0, z: Z_EXTENT * surfaceLift });
+
+        const rotated = samplePoints.map((point) => rotate(point, progress));
+        const xs = rotated.map((point) => point.x);
+        const ys = rotated.map((point) => point.y);
+        const minX = Math.min(...xs);
+        const maxX = Math.max(...xs);
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
+        const usableWidth = state.width * 0.8;
+        const usableHeight = state.height * 0.76;
+        const scale = Math.min(usableWidth / (maxX - minX || 1), usableHeight / (maxY - minY || 1));
+
+        return {
+          scale,
+          offsetX: state.width / 2 - scale * (minX + maxX) / 2,
+          offsetY: state.height / 2 - scale * (minY + maxY) / 2 + state.height * 0.06,
+        };
+      }
+
+      function project(point, progress, viewport) {
+        const rotated = rotate(point, progress);
+        return {
+          x: viewport.offsetX + rotated.x * viewport.scale,
+          y: viewport.offsetY + rotated.y * viewport.scale,
+          depth: rotated.z,
+        };
+      }
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        state.width = rect.width;
+        state.height = rect.height;
+        state.dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(rect.width * state.dpr);
+        canvas.height = Math.round(rect.height * state.dpr);
+        ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+      }
+
+      function drawLine(points2d, color, width, alpha = 1, dash = []) {
+        if (points2d.length < 2) {
+          return;
+        }
+
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.globalAlpha = alpha;
+        ctx.setLineDash(dash);
+        ctx.beginPath();
+        ctx.moveTo(points2d[0].x, points2d[0].y);
+        for (let i = 1; i < points2d.length; i += 1) {
+          ctx.lineTo(points2d[i].x, points2d[i].y);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawSurface(progress, viewport) {
+        const liftProgress = smoothstep(0.02, 1, progress);
+        const alpha = 0.16 + 0.62 * liftProgress;
+        const gridColor = "rgba(20, 70, 60, 0.28)";
+
+        for (let x = -SURFACE_RADIUS; x <= SURFACE_RADIUS + 0.001; x += SURFACE_STEP) {
+          const line = [];
+          for (let y = -SURFACE_RADIUS; y <= SURFACE_RADIUS + 0.001; y += 0.11) {
+            line.push(
+              project(
+                { x, y, z: quadRadius(Math.hypot(x, y)) * progress },
+                progress,
+                viewport,
+              ),
+            );
+          }
+          drawLine(line, gridColor, 1.3, alpha);
+        }
+
+        for (let y = -SURFACE_RADIUS; y <= SURFACE_RADIUS + 0.001; y += SURFACE_STEP) {
+          const line = [];
+          for (let x = -SURFACE_RADIUS; x <= SURFACE_RADIUS + 0.001; x += 0.11) {
+            line.push(
+              project(
+                { x, y, z: quadRadius(Math.hypot(x, y)) * progress },
+                progress,
+                viewport,
+              ),
+            );
+          }
+          drawLine(line, gridColor, 1.3, alpha);
+        }
+      }
+
+      function drawProfileCurve(progress, viewport) {
+        const alpha = smoothstep(0.32, 1, progress);
+        if (alpha <= 0) {
+          return;
+        }
+
+        const profile = [];
+        for (let x = -SURFACE_RADIUS; x <= SURFACE_RADIUS + 0.001; x += 0.04) {
+          profile.push(
+            project(
+              { x, y: 0, z: quadRadius(Math.abs(x)) * progress },
+              progress,
+              viewport,
+            ),
+          );
+        }
+
+        drawLine(profile, "rgba(204, 90, 59, 0.88)", 3.2, alpha);
+      }
+
+      function drawPlane(progress, viewport) {
+        const planeOpacity = smoothstep(0.35, 1, progress) * 0.9;
+        const z = quadRadius(Math.sqrt(RING_THRESHOLD)) * progress;
+        const corners = [
+          { x: -SURFACE_RADIUS, y: -SURFACE_RADIUS, z },
+          { x: SURFACE_RADIUS, y: -SURFACE_RADIUS, z },
+          { x: SURFACE_RADIUS, y: SURFACE_RADIUS, z },
+          { x: -SURFACE_RADIUS, y: SURFACE_RADIUS, z },
+        ].map((point) => project(point, progress, viewport));
+
+        ctx.save();
+        ctx.globalAlpha = planeOpacity;
+        ctx.fillStyle = "rgba(10, 127, 100, 0.16)";
+        ctx.strokeStyle = "rgba(10, 127, 100, 0.38)";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(corners[0].x, corners[0].y);
+        for (let i = 1; i < corners.length; i += 1) {
+          ctx.lineTo(corners[i].x, corners[i].y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawSeparatorCircle(progress, viewport) {
+        const ring = [];
+        const radius = Math.sqrt(RING_THRESHOLD);
+        const z = quadRadius(radius) * progress;
+        const samples = 120;
+
+        for (let i = 0; i <= samples; i += 1) {
+          const angle = (i / samples) * TAU;
+          ring.push(
+            project(
+              { x: radius * Math.cos(angle), y: radius * Math.sin(angle), z },
+              progress,
+              viewport,
+            ),
+          );
+        }
+
+        drawLine(ring, "rgba(10, 127, 100, 0.96)", 3, 0.95, progress < 0.18 ? [9, 8] : []);
+      }
+
+      function drawAxes(progress, viewport) {
+        const zAlpha = smoothstep(0.1, 0.35, progress);
+        const axisSets = [
+          {
+            color: "rgba(30, 43, 42, 0.44)",
+            label: "x",
+            from: { x: -AXIS_EXTENT, y: 0, z: 0 },
+            to: { x: AXIS_EXTENT, y: 0, z: 0 },
+          },
+          {
+            color: "rgba(30, 43, 42, 0.44)",
+            label: "y",
+            from: { x: 0, y: -AXIS_EXTENT, z: 0 },
+            to: { x: 0, y: AXIS_EXTENT, z: 0 },
+          },
+          {
+            color: "rgba(10, 127, 100, 0.55)",
+            label: "z",
+            from: { x: 0, y: 0, z: 0 },
+            to: { x: 0, y: 0, z: Z_EXTENT * progress },
+            alpha: zAlpha,
+          },
+        ];
+
+        ctx.save();
+        ctx.font = "600 15px 'Avenir Next', 'Trebuchet MS', sans-serif";
+        ctx.fillStyle = "rgba(30, 43, 42, 0.85)";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        for (const axis of axisSets) {
+          const from = project(axis.from, progress, viewport);
+          const to = project(axis.to, progress, viewport);
+          const alpha = axis.alpha === undefined ? 1 : axis.alpha;
+          drawLine([from, to], axis.color, 1.8, alpha);
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = axis.color;
+          ctx.fillText(axis.label, to.x, to.y - 12);
+        }
+
+        ctx.restore();
+      }
+
+      function drawPoints(progress, viewport) {
+        const projected = points.map((point) => {
+          const lifted = { x: point.x, y: point.y, z: point.z * progress };
+          return {
+            ...project(lifted, progress, viewport),
+            className: point.className,
+          };
+        });
+
+        projected.sort((a, b) => a.depth - b.depth);
+
+        for (const point of projected) {
+          const fill = point.className === "inner" ? "#cc5a3b" : "#2f6ea8";
+          const glow = point.className === "inner" ? "rgba(204, 90, 59, 0.18)" : "rgba(47, 110, 168, 0.16)";
+
+          ctx.save();
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, 10.5, 0, TAU);
+          ctx.fill();
+
+          ctx.fillStyle = fill;
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, 5.8, 0, TAU);
+          ctx.fill();
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      function drawBackdrop(progress) {
+        ctx.clearRect(0, 0, state.width, state.height);
+
+        const gradient = ctx.createLinearGradient(0, 0, 0, state.height);
+        gradient.addColorStop(0, "#fcf7ef");
+        gradient.addColorStop(1, "#efe5d2");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, state.width, state.height);
+
+        ctx.save();
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.beginPath();
+        ctx.ellipse(state.width * 0.22, state.height * 0.16, 110, 60, -0.35, 0, TAU);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(state.width * 0.78, state.height * 0.82, 130, 70, 0.28, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+
+        const bandAlpha = 0.15 + 0.2 * smoothstep(0, 1, progress);
+        ctx.save();
+        ctx.globalAlpha = bandAlpha;
+        ctx.fillStyle = "rgba(10, 127, 100, 0.08)";
+        ctx.fillRect(0, state.height * 0.68, state.width, state.height * 0.32);
+        ctx.restore();
+      }
+
+      function updateText(progress) {
+        let phase = "2D plane";
+        let title = "No line works in the original plane";
+        let body =
+          "The red class is surrounded by the blue class. Any straight separator leaves points from both classes mixed on at least one side.";
+
+        if (progress > 0.22 && progress <= 0.74) {
+          phase = "Lifting with x^2 + y^2";
+          title = "The quadratic feature starts pulling classes apart";
+          body =
+            "As z grows like x^2 + y^2, outer-ring points rise faster than center points. The separation is still the same dataset, but now viewed in a richer feature space.";
+        } else if (progress > 0.74) {
+          phase = "3D side view";
+          title = "The lifted surface is now an upward-opening parabola";
+          body =
+            "From the side, the quadratic lift reads as an upward-opening parabola. A horizontal plane cleanly splits the lower red points from the higher blue points, which is the geometric intuition behind the kernel trick.";
+        }
+
+        phaseLabel.textContent = phase;
+        storyTitle.textContent = title;
+        storyBody.textContent = body;
+      }
+
+      function render(time = 0) {
+        if (state.lastTime) {
+          const dt = Math.min(40, time - state.lastTime);
+          const spinEnabled = state.target === 1 && state.progress > 0.985;
+          if (spinEnabled) {
+            state.spin += dt * 0.00032;
+          }
+        }
+        state.lastTime = time;
+
+        state.progress += (state.target - state.progress) * 0.14;
+        if (Math.abs(state.target - state.progress) < 0.0006) {
+          state.progress = state.target;
+        }
+
+        drawBackdrop(state.progress);
+        const viewport = buildViewport(state.progress);
+        drawSurface(state.progress, viewport);
+        drawProfileCurve(state.progress, viewport);
+        drawPlane(state.progress, viewport);
+        drawSeparatorCircle(state.progress, viewport);
+        drawAxes(state.progress, viewport);
+        drawPoints(state.progress, viewport);
+        updateText(state.progress);
+
+        requestAnimationFrame(render);
+      }
+
+      slider.addEventListener("input", (event) => {
+        state.target = Number(event.target.value) / 100;
+      });
+
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+      render();
+    </script>
+  </body>
+</html>

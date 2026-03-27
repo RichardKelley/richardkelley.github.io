@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KL Divergence Demo</title>
+    <style>
+      :root {
+        --bg: #f4efe8;
+        --panel: rgba(255, 251, 245, 0.94);
+        --ink: #18262d;
+        --muted: #5c6a71;
+        --line: rgba(24, 38, 45, 0.12);
+        --accent: #0f6bcf;
+        --accent-soft: rgba(15, 107, 207, 0.12);
+        --accent-strong: #0a4b94;
+        --warm: #d66a36;
+        --warm-soft: rgba(214, 106, 54, 0.12);
+        --mint: #14846d;
+        --shadow: 0 22px 56px rgba(54, 39, 16, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.78), transparent 30%),
+          radial-gradient(circle at bottom right, rgba(240, 209, 161, 0.38), transparent 30%),
+          linear-gradient(160deg, var(--bg) 0%, #efe8d9 56%, #e8dec9 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.24;
+        background-image:
+          linear-gradient(rgba(26, 42, 50, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(26, 42, 50, 0.05) 1px, transparent 1px);
+        background-size: 28px 28px;
+        mask-image: radial-gradient(circle at center, black 36%, transparent 86%);
+      }
+
+      .page {
+        width: min(1260px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 28px 0 40px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 9ch;
+        font-size: clamp(2.2rem, 4.6vw, 4.2rem);
+        line-height: 0.92;
+        letter-spacing: -0.045em;
+      }
+
+      .subtitle {
+        max-width: 76ch;
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 1.02rem;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 13px;
+        border-radius: 999px;
+        background: rgba(255, 250, 242, 0.9);
+        border: 1px solid rgba(24, 38, 45, 0.08);
+        box-shadow: 0 8px 20px rgba(66, 49, 22, 0.08);
+        font-size: 0.93rem;
+      }
+
+      .chip strong {
+        font-weight: 700;
+      }
+
+      .kl-panel {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 18px;
+        padding: 18px 20px;
+        border-radius: 28px;
+        background: var(--panel);
+        border: 1px solid rgba(24, 38, 45, 0.08);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      .kl-line {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 12px;
+      }
+
+      .kl-symbol {
+        font-size: 1rem;
+        color: var(--muted);
+      }
+
+      .kl-value {
+        font-size: clamp(2rem, 5vw, 3.2rem);
+        line-height: 1;
+        letter-spacing: -0.05em;
+        font-weight: 750;
+      }
+
+      .kl-note {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .panel {
+        padding: 18px;
+        border-radius: 28px;
+        background: var(--panel);
+        border: 1px solid rgba(24, 38, 45, 0.08);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .panel-head h2 {
+        margin: 0;
+        font-size: 1.08rem;
+        letter-spacing: -0.02em;
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .dist-badge {
+        padding: 7px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+
+      .dist-badge.p {
+        color: var(--accent-strong);
+        background: var(--accent-soft);
+      }
+
+      .dist-badge.q {
+        color: #9a4c22;
+        background: var(--warm-soft);
+      }
+
+      .panel-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .action-button {
+        border: 1px solid rgba(24, 38, 45, 0.12);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--ink);
+        padding: 8px 12px;
+        font: inherit;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .action-button:hover {
+        background: rgba(255, 255, 255, 1);
+      }
+
+      .action-button:focus {
+        outline: 2px solid rgba(15, 107, 207, 0.15);
+        border-color: rgba(15, 107, 207, 0.3);
+      }
+
+      .hist-wrap {
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.66);
+        overflow: hidden;
+      }
+
+      .histogram {
+        display: block;
+        width: 100%;
+        height: auto;
+        touch-action: none;
+        cursor: grab;
+      }
+
+      .histogram.dragging {
+        cursor: grabbing;
+      }
+
+      .plot-grid {
+        stroke: rgba(24, 38, 45, 0.08);
+        stroke-width: 1;
+      }
+
+      .plot-axis {
+        stroke: rgba(24, 38, 45, 0.24);
+        stroke-width: 1.5;
+      }
+
+      .axis-label {
+        fill: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .bar-slot {
+        fill: rgba(24, 38, 45, 0.03);
+        rx: 18px;
+      }
+
+      .bar-fill.p {
+        fill: rgba(15, 107, 207, 0.8);
+      }
+
+      .bar-fill.q {
+        fill: rgba(214, 106, 54, 0.8);
+      }
+
+      .bar-hit {
+        fill: transparent;
+        cursor: ns-resize;
+      }
+
+      .bar-handle {
+        stroke: rgba(255, 255, 255, 0.96);
+        stroke-width: 2.5;
+        cursor: ns-resize;
+      }
+
+      .bar-handle.p {
+        fill: var(--accent);
+      }
+
+      .bar-handle.q {
+        fill: var(--warm);
+      }
+
+      .bar-value {
+        fill: var(--ink);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .bar-word {
+        fill: var(--ink);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .prob-block {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .prob-hist-wrap {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.66);
+        overflow: hidden;
+      }
+
+      .prob-histogram {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .sample-block {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .sample-label {
+        font-size: 0.84rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .sample-sequence {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-height: 42px;
+        padding: 10px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.66);
+      }
+
+      .sample-token {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.92rem;
+      }
+
+      .sample-token.p {
+        color: var(--accent-strong);
+        background: var(--accent-soft);
+      }
+
+      .sample-token.q {
+        color: #9a4c22;
+        background: var(--warm-soft);
+      }
+
+      @media (max-width: 980px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        h1 {
+          max-width: none;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page {
+          width: min(100vw - 20px, 1260px);
+          padding-top: 20px;
+        }
+
+        .panel,
+        .kl-panel {
+          padding: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <h1>Dragging distributions apart</h1>
+        <p class="subtitle">
+          Each panel starts from five logits over the same vocabulary. Drag a bar handle up or down to change those
+          logits directly, then compare the softmax probabilities, the resulting samples, and the KL divergence.
+        </p>
+        <div class="chips">
+          <div class="chip"><strong>Words</strong> same 5-word support for both distributions</div>
+          <div class="chip"><strong>Drag</strong> the logits directly</div>
+          <div class="chip"><strong>KL</strong> shows how far <code>P</code> is from <code>Q</code></div>
+        </div>
+      </section>
+
+      <section class="kl-panel">
+        <div class="kl-line">
+          <span class="kl-symbol">KL divergence</span>
+          <span class="kl-value" id="kl-value">0.000 bits</span>
+        </div>
+        <p class="kl-note" id="kl-note">
+          This page shows <code>D<sub>KL</sub>(P || Q)</code> = Σ p(x) log<sub>2</sub>(p(x) / q(x)). It is directional: swapping
+          <code>P</code> and <code>Q</code> would give a different value.
+        </p>
+      </section>
+
+      <section class="grid">
+        <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Reference Distribution</h2>
+                <p class="eyebrow">Bar heights are logits for <code>P</code>.</p>
+              </div>
+              <div class="panel-actions">
+                <button id="randomize-p" class="action-button" type="button">Randomize P</button>
+              <span class="dist-badge p">P</span>
+            </div>
+          </div>
+          <div class="hist-wrap">
+            <svg id="hist-p" class="histogram" viewBox="0 0 560 340" aria-label="P histogram"></svg>
+          </div>
+          <div class="prob-block">
+            <div class="sample-label">Softmax Probabilities</div>
+            <div class="prob-hist-wrap">
+              <svg id="probs-p" class="prob-histogram" viewBox="0 0 560 240" aria-label="P probabilities"></svg>
+            </div>
+          </div>
+          <div class="sample-block">
+            <div class="sample-label">Sample Sequence From P</div>
+            <div class="sample-sequence" id="sample-p"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Comparison Distribution</h2>
+              <p class="eyebrow">Bar heights are logits for <code>Q</code>.</p>
+            </div>
+            <span class="dist-badge q">Q</span>
+          </div>
+          <div class="hist-wrap">
+            <svg id="hist-q" class="histogram" viewBox="0 0 560 340" aria-label="Q histogram"></svg>
+          </div>
+          <div class="prob-block">
+            <div class="sample-label">Softmax Probabilities</div>
+            <div class="prob-hist-wrap">
+              <svg id="probs-q" class="prob-histogram" viewBox="0 0 560 240" aria-label="Q probabilities"></svg>
+            </div>
+          </div>
+          <div class="sample-block">
+            <div class="sample-label">Sample Sequence From Q</div>
+            <div class="sample-sequence" id="sample-q"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const words = ["cat", "dog", "runs", "sees", "car"];
+      const LOGIT_MIN = -3;
+      const LOGIT_MAX = 3;
+
+      const state = {
+        p: { logits: [-1.02, -1.35, -1.83, -1.97, -2.53] },
+        q: { logits: [-2.53, -1.71, -1.66, -1.31, -1.27] },
+        dragging: null,
+      };
+
+      const svgP = document.getElementById("hist-p");
+      const svgQ = document.getElementById("hist-q");
+      const randomizePButton = document.getElementById("randomize-p");
+      const probsP = document.getElementById("probs-p");
+      const probsQ = document.getElementById("probs-q");
+      const sampleP = document.getElementById("sample-p");
+      const sampleQ = document.getElementById("sample-q");
+      const klValue = document.getElementById("kl-value");
+      const klNote = document.getElementById("kl-note");
+
+      const plot = {
+        width: 560,
+        height: 340,
+        left: 42,
+        right: 22,
+        top: 24,
+        bottom: 68,
+      };
+
+      const probPlot = {
+        width: 560,
+        height: 240,
+        left: 42,
+        right: 22,
+        top: 18,
+        bottom: 56,
+      };
+
+      function sum(values) {
+        return values.reduce((acc, value) => acc + value, 0);
+      }
+
+      function formatProb(value) {
+        return value.toFixed(2);
+      }
+
+      function formatLogit(value) {
+        return value.toFixed(2);
+      }
+
+      function softmax(logits) {
+        const max = Math.max(...logits);
+        const exps = logits.map((value) => Math.exp(value - max));
+        const total = sum(exps);
+        return exps.map((value) => value / total);
+      }
+
+      function hashArray(name, values) {
+        let hash = name === "p" ? 1777 : 3559;
+        for (const value of values) {
+          hash = (hash * 33 + Math.round(value * 1000)) >>> 0;
+        }
+        return hash;
+      }
+
+      function mulberry32(seed) {
+        let t = seed >>> 0;
+        return function next() {
+          t += 0x6d2b79f5;
+          let z = Math.imul(t ^ (t >>> 15), 1 | t);
+          z ^= z + Math.imul(z ^ (z >>> 7), 61 | z);
+          return ((z ^ (z >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+
+      function randomLogits(count) {
+        return Array.from({ length: count }, () => Number((LOGIT_MIN + Math.random() * (LOGIT_MAX - LOGIT_MIN)).toFixed(2)));
+      }
+
+      function sampleFromDistribution(name, probs, length = 12) {
+        const rng = mulberry32(hashArray(name, probs));
+        const cdf = [];
+        let running = 0;
+        for (const value of probs) {
+          running += value;
+          cdf.push(running);
+        }
+
+        return Array.from({ length }, () => {
+          const u = rng();
+          for (let i = 0; i < cdf.length; i += 1) {
+            if (u <= cdf[i]) {
+              return words[i];
+            }
+          }
+          return words[words.length - 1];
+        });
+      }
+
+      function klDivergence(p, q) {
+        let total = 0;
+        for (let i = 0; i < p.length; i += 1) {
+          const pi = p[i];
+          const qi = q[i];
+          if (pi === 0) {
+            continue;
+          }
+          if (qi === 0) {
+            return Infinity;
+          }
+          total += pi * Math.log2(pi / qi);
+        }
+        return total;
+      }
+
+      function axisY(logit) {
+        const usable = plot.height - plot.top - plot.bottom;
+        const t = (logit - LOGIT_MIN) / (LOGIT_MAX - LOGIT_MIN);
+        return plot.height - plot.bottom - t * usable;
+      }
+
+      function logitFromY(y) {
+        const usable = plot.height - plot.top - plot.bottom;
+        const clamped = Math.min(plot.height - plot.bottom, Math.max(plot.top, y));
+        const t = (plot.height - plot.bottom - clamped) / usable;
+        const value = LOGIT_MIN + t * (LOGIT_MAX - LOGIT_MIN);
+        return Number(value.toFixed(2));
+      }
+
+      function slotX(index) {
+        const usable = plot.width - plot.left - plot.right;
+        const gap = 18;
+        const slotWidth = (usable - gap * (words.length - 1)) / words.length;
+        return plot.left + index * (slotWidth + gap);
+      }
+
+      function slotWidth() {
+        const usable = plot.width - plot.left - plot.right;
+        const gap = 18;
+        return (usable - gap * (words.length - 1)) / words.length;
+      }
+
+      function probAxisY(prob) {
+        const usable = probPlot.height - probPlot.top - probPlot.bottom;
+        return probPlot.height - probPlot.bottom - prob * usable;
+      }
+
+      function renderHistogram(name, svg) {
+        const dist = state[name];
+        const probs = softmax(dist.logits);
+        const width = slotWidth();
+        const colorClass = name === "p" ? "p" : "q";
+        const zeroY = axisY(0);
+        const gridValues = [-3, -1.5, 0, 1.5, 3];
+        const gridLines = gridValues.map((value) => {
+          const y = axisY(value);
+          return `
+            <line class="plot-grid" x1="${plot.left}" y1="${y}" x2="${plot.width - plot.right}" y2="${y}" />
+            <text class="axis-label" x="8" y="${y + 4}">${value.toFixed(1)}</text>
+          `;
+        }).join("");
+
+        const bars = dist.logits
+          .map((logit, index) => {
+            const x = slotX(index);
+            const y = axisY(logit);
+            const rectY = logit >= 0 ? y : zeroY;
+            const height = Math.max(2, Math.abs(zeroY - y));
+            const labelY = plot.height - 26;
+            const textY = logit >= 0 ? Math.max(plot.top + 14, y - 10) : Math.min(plot.height - plot.bottom - 10, y + 20);
+            return `
+              <g data-name="${name}" data-index="${index}">
+                <rect class="bar-slot" x="${x}" y="${plot.top}" width="${width}" height="${plot.height - plot.top - plot.bottom}" rx="16" />
+                <rect class="bar-fill ${colorClass}" x="${x}" y="${rectY}" width="${width}" height="${height}" rx="16" />
+                <rect class="bar-hit" x="${x}" y="${plot.top}" width="${width}" height="${plot.height - plot.top - plot.bottom}" data-name="${name}" data-index="${index}" />
+                <circle class="bar-handle ${colorClass}" cx="${x + width / 2}" cy="${y}" r="9" data-name="${name}" data-index="${index}" />
+                <text class="bar-value" x="${x + width / 2}" y="${textY}" text-anchor="middle">${formatLogit(logit)}</text>
+                <text class="bar-word" x="${x + width / 2}" y="${labelY}" text-anchor="middle">${words[index]}</text>
+              </g>
+            `;
+          })
+          .join("");
+
+        svg.innerHTML = `
+          ${gridLines}
+          <line class="plot-axis" x1="${plot.left}" y1="${zeroY}" x2="${plot.width - plot.right}" y2="${zeroY}" />
+          ${bars}
+        `;
+      }
+
+      function renderProbabilities(target, name, probs) {
+        const colorClass = name === "p" ? "p" : "q";
+        const width = slotWidth();
+        const gridValues = [0, 0.25, 0.5, 0.75, 1];
+        const gridLines = gridValues.map((value) => {
+          const y = probAxisY(value);
+          return `
+            <line class="plot-grid" x1="${probPlot.left}" y1="${y}" x2="${probPlot.width - probPlot.right}" y2="${y}" />
+            <text class="axis-label" x="8" y="${y + 4}">${value.toFixed(2)}</text>
+          `;
+        }).join("");
+
+        const bars = probs
+          .map((prob, index) => {
+            const x = slotX(index);
+            const y = probAxisY(prob);
+            const height = probPlot.height - probPlot.bottom - y;
+            const labelY = probPlot.height - 20;
+            return `
+              <g>
+                <rect class="bar-slot" x="${x}" y="${probPlot.top}" width="${width}" height="${probPlot.height - probPlot.top - probPlot.bottom}" rx="16" />
+                <rect class="bar-fill ${colorClass}" x="${x}" y="${y}" width="${width}" height="${height}" rx="16" />
+                <text class="bar-value" x="${x + width / 2}" y="${Math.max(probPlot.top + 14, y - 8)}" text-anchor="middle">${formatProb(prob)}</text>
+                <text class="bar-word" x="${x + width / 2}" y="${labelY}" text-anchor="middle">${words[index]}</text>
+              </g>
+            `;
+          })
+          .join("");
+
+        target.innerHTML = `
+          ${gridLines}
+          <line class="plot-axis" x1="${probPlot.left}" y1="${probPlot.height - probPlot.bottom}" x2="${probPlot.width - probPlot.right}" y2="${probPlot.height - probPlot.bottom}" />
+          ${bars}
+        `;
+      }
+
+      function renderSample(target, name, probs) {
+        const sample = sampleFromDistribution(name, probs);
+        const klass = name === "p" ? "p" : "q";
+        target.innerHTML = sample.map((token) => `<span class="sample-token ${klass}">${token}</span>`).join("");
+      }
+
+      function renderKL() {
+        const p = softmax(state.p.logits);
+        const q = softmax(state.q.logits);
+        const value = klDivergence(p, q);
+        klValue.textContent = Number.isFinite(value) ? `${value.toFixed(3)} bits` : "Infinity";
+        klNote.innerHTML = Number.isFinite(value)
+          ? 'This page shows <code>D<sub>KL</sub>(P || Q)</code> = Σ p(x) log<sub>2</sub>(p(x) / q(x)). It is directional: swapping <code>P</code> and <code>Q</code> would give a different value.'
+          : 'This page shows <code>D<sub>KL</sub>(P || Q)</code>. It is infinite here because some word has positive mass in <code>P</code> and zero mass in <code>Q</code>.';
+      }
+
+      function rerender() {
+        const p = softmax(state.p.logits);
+        const q = softmax(state.q.logits);
+        renderHistogram("p", svgP);
+        renderHistogram("q", svgQ);
+        renderProbabilities(probsP, "p", p);
+        renderProbabilities(probsQ, "q", q);
+        renderSample(sampleP, "p", p);
+        renderSample(sampleQ, "q", q);
+        renderKL();
+      }
+
+      function startDrag(event, svg) {
+        const target = event.target.closest("[data-name][data-index]");
+        if (!target) {
+          return;
+        }
+
+        state.dragging = {
+          name: target.dataset.name,
+          index: Number(target.dataset.index),
+          svg,
+        };
+
+        svg.classList.add("dragging");
+        svg.setPointerCapture(event.pointerId);
+        moveDrag(event);
+      }
+
+      function moveDrag(event) {
+        if (!state.dragging) {
+          return;
+        }
+
+        const { name, index, svg } = state.dragging;
+        const rect = svg.getBoundingClientRect();
+        const y = ((event.clientY - rect.top) / rect.height) * plot.height;
+        state[name].logits[index] = logitFromY(y);
+        rerender();
+      }
+
+      function stopDrag(event) {
+        if (!state.dragging) {
+          return;
+        }
+
+        const { svg } = state.dragging;
+        if (event && svg.hasPointerCapture(event.pointerId)) {
+          svg.releasePointerCapture(event.pointerId);
+        }
+        svg.classList.remove("dragging");
+        state.dragging = null;
+      }
+
+      svgP.addEventListener("pointerdown", (event) => startDrag(event, svgP));
+      svgQ.addEventListener("pointerdown", (event) => startDrag(event, svgQ));
+      svgP.addEventListener("pointermove", moveDrag);
+      svgQ.addEventListener("pointermove", moveDrag);
+      svgP.addEventListener("pointerup", stopDrag);
+      svgQ.addEventListener("pointerup", stopDrag);
+      svgP.addEventListener("pointercancel", stopDrag);
+      svgQ.addEventListener("pointercancel", stopDrag);
+
+      randomizePButton.addEventListener("click", () => {
+        state.p.logits = randomLogits(words.length);
+        rerender();
+      });
+
+      rerender();
+    </script>
+  </body>
+</html>
