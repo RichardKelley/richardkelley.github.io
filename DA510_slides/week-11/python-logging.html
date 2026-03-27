@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Example Python logging</title>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    body {
+      margin: 0;
+      padding: 2rem;
+      font-family: Georgia, "Times New Roman", serif;
+      background: #f6f3ec;
+      color: #1f2328;
+    }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 0.75rem;
+      font-size: 2rem;
+    }
+
+    p {
+      margin: 0 0 1rem;
+      line-height: 1.5;
+    }
+
+    pre {
+      margin: 0;
+      padding: 1.25rem;
+      overflow-x: auto;
+      border: 1px solid #d0c7b8;
+      border-radius: 8px;
+      background: #fffdf8;
+      font: 14px/1.5 "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    a {
+      color: #0b57d0;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Example Python logging</h1>
+    <pre><code>from __future__ import annotations
+
+import logging
+from contextlib import asynccontextmanager
+
+import uvicorn
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+
+
+logging.basicConfig(
+    filename="app.log",
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s",
+    datefmt="%H:%M:%S",
+    force=True,
+)
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    logger.info("Application startup complete")
+    yield
+
+
+app = FastAPI(
+    title="Logging Demo",
+    description="A very small FastAPI app that demonstrates file logging.",
+    lifespan=lifespan,
+)
+
+
+@app.get("/")
+async def root():
+    logger.info("Home page visited")
+    return {
+        "message": "Logging demo is running",
+        "ideas": [
+            "Log messages can be written to a file",
+            "Use log levels: INFO, WARNING, ERROR",
+            "Log exceptions with stack traces",
+        ],
+        "log_file": "app.log",
+    }
+
+
+@app.get("/items/{item_id}")
+async def get_item(item_id: int):
+    logger.info("Looking up item %s", item_id)
+    if item_id &lt; 0:
+        logger.warning("Negative item requested: %s", item_id)
+        return JSONResponse(
+            status_code=400,
+            content={"error": "item_id must be non-negative"},
+        )
+
+    return {"item_id": item_id, "status": "ok"}
+
+
+@app.get("/crash")
+async def crash():
+    try:
+        raise RuntimeError("Simulated server failure for logging demo")
+    except RuntimeError:
+        logger.exception("Example error")
+        return JSONResponse(
+            status_code=500,
+            content={"error": "example failure was logged"},
+        )
+
+
+def main() -&gt; None:
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+  </main>
+</body>
+</html>
